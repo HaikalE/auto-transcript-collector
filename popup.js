@@ -1,4 +1,4 @@
-// popup.js - Simple START/STOP interface for Auto Transcript Collector
+// popup.js - FIXED VERSION - No more crashes!
 
 // Elements
 const statusCircle = document.getElementById('statusCircle');
@@ -15,101 +15,124 @@ const extensionStatus = document.getElementById('extensionStatus');
 let isActive = false;
 let currentMode = 'clipboard';
 let stats = { detected: 0, processed: 0 };
+let isProcessing = false; // Prevent double clicks
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  loadState();
-  updateUI();
+  console.log('🎉 Popup loading...');
   
-  // Event listeners
-  toggleBtn.addEventListener('click', toggleMonitoring);
-  clipboardBtn.addEventListener('click', () => setMode('clipboard'));
-  downloadBtn.addEventListener('click', () => setMode('download'));
+  // Load state dengan timeout untuk prevent freeze
+  setTimeout(loadState, 100);
+  
+  // Event listeners dengan proper error handling
+  toggleBtn.addEventListener('click', handleToggleClick);
+  clipboardBtn.addEventListener('click', () => handleModeClick('clipboard'));
+  downloadBtn.addEventListener('click', () => handleModeClick('download'));
 });
 
-// Load state dari background
+// Load state dari background dengan timeout protection
 function loadState() {
-  chrome.runtime.sendMessage({ action: 'getState' }, function(response) {
-    if (response) {
-      isActive = response.isActive || false;
-      currentMode = response.mode || 'clipboard';
-      stats = response.stats || { detected: 0, processed: 0 };
+  try {
+    chrome.runtime.sendMessage({ action: 'getState' }, function(response) {
+      if (chrome.runtime.lastError) {
+        console.error('Error loading state:', chrome.runtime.lastError.message);
+        // Set default state jika error
+        isActive = false;
+        currentMode = 'clipboard';
+        stats = { detected: 0, processed: 0 };
+      } else if (response) {
+        isActive = response.isActive || false;
+        currentMode = response.mode || 'clipboard';
+        stats = response.stats || { detected: 0, processed: 0 };
+      }
+      
       updateUI();
-    }
-  });
+      console.log('✅ State loaded:', { isActive, currentMode, stats });
+    });
+  } catch (error) {
+    console.error('Error in loadState:', error);
+    // Fallback ke default state
+    isActive = false;
+    currentMode = 'clipboard';
+    stats = { detected: 0, processed: 0 };
+    updateUI();
+  }
 }
 
-// Update UI berdasarkan state
-function updateUI() {
-  // Update status circle
-  if (isActive) {
-    statusCircle.className = 'status-circle active';
-    statusCircle.textContent = '🚀';
-    statusText.textContent = 'MONITORING';
-    statusSub.textContent = 'Scanning for transcript URLs...';
-    toggleBtn.className = 'toggle-btn stop';
-    toggleBtn.textContent = '⏹️ STOP MONITORING';
-    extensionStatus.textContent = 'Active';
-  } else {
-    statusCircle.className = 'status-circle inactive';
-    statusCircle.textContent = '⏸️';
-    statusText.textContent = 'STOPPED';
-    statusSub.textContent = 'Click START to begin monitoring';
-    toggleBtn.className = 'toggle-btn start';
-    toggleBtn.textContent = '🚀 START MONITORING';
-    extensionStatus.textContent = 'Stopped';
+// Handle toggle click dengan protection
+function handleToggleClick() {
+  if (isProcessing) {
+    console.log('⏳ Already processing, ignoring click');
+    return;
   }
   
-  // Update mode buttons
-  clipboardBtn.classList.toggle('active', currentMode === 'clipboard');
-  downloadBtn.classList.toggle('active', currentMode === 'download');
+  isProcessing = true;
+  toggleBtn.disabled = true;
+  toggleBtn.textContent = isActive ? '⏳ STOPPING...' : '⏳ STARTING...';
   
-  // Update stats
-  detectedCount.textContent = stats.detected;
-  processedCount.textContent = stats.processed;
-}
-
-// Toggle monitoring on/off
-function toggleMonitoring() {
-  isActive = !isActive;
+  console.log('🔄 Toggle clicked, current state:', isActive);
   
-  // Send message ke background untuk enable/disable monitoring
-  chrome.runtime.sendMessage({
-    action: 'toggleMonitoring',
-    isActive: isActive,
-    mode: currentMode
-  }, function(response) {
-    if (response && response.success) {
+  const newState = !isActive;
+  
+  try {
+    chrome.runtime.sendMessage({
+      action: 'toggleMonitoring',
+      isActive: newState,
+      mode: currentMode
+    }, function(response) {
+      isProcessing = false;
+      toggleBtn.disabled = false;
+      
+      if (chrome.runtime.lastError) {
+        console.error('❌ Toggle error:', chrome.runtime.lastError.message);
+        showNotification('❌ Error: ' + chrome.runtime.lastError.message, 'error');
+      } else if (response && response.success) {
+        isActive = newState;
+        console.log('✅ Toggle successful, new state:', isActive);
+        showNotification(
+          isActive ? '✅ Monitoring started!' : '⏹️ Monitoring stopped!',
+          'success'
+        );
+      } else {
+        console.error('❌ Toggle failed:', response);
+        showNotification('❌ Failed to toggle monitoring', 'error');
+      }
+      
       updateUI();
-      
-      // Visual feedback
-      toggleBtn.style.transform = 'scale(0.95)';
-      setTimeout(() => {
-        toggleBtn.style.transform = '';
-      }, 150);
-      
-      // Show notification
-      showNotification(
-        isActive ? '✅ Monitoring started!' : '⏹️ Monitoring stopped!',
-        'success'
-      );
-    } else {
-      // Revert state jika gagal
-      isActive = !isActive;
-      showNotification('❌ Failed to toggle monitoring', 'error');
-    }
-  });
+    });
+  } catch (error) {
+    console.error('❌ Exception in toggle:', error);
+    isProcessing = false;
+    toggleBtn.disabled = false;
+    showNotification('❌ Error: ' + error.message, 'error');
+    updateUI();
+  }
 }
 
-// Set mode (clipboard/download)
-function setMode(mode) {
+// Handle mode click dengan protection
+function handleModeClick(mode) {
+  if (isProcessing) {
+    console.log('⏳ Processing, ignoring mode click');
+    return;
+  }
+  
+  console.log('🎯 Mode clicked:', mode);
   currentMode = mode;
   
-  // Send ke background
-  chrome.runtime.sendMessage({
-    action: 'setMode',
-    mode: currentMode
-  });
+  try {
+    chrome.runtime.sendMessage({
+      action: 'setMode',
+      mode: currentMode
+    }, function(response) {
+      if (chrome.runtime.lastError) {
+        console.error('Error setting mode:', chrome.runtime.lastError.message);
+      } else {
+        console.log('✅ Mode set to:', currentMode);
+      }
+    });
+  } catch (error) {
+    console.error('Error in setMode:', error);
+  }
   
   updateUI();
   
@@ -126,70 +149,121 @@ function setMode(mode) {
   );
 }
 
-// Show notification
-function showNotification(message, type) {
-  // Create notification element
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 8px 12px;
-    border-radius: 4px;
-    color: white;
-    font-size: 11px;
-    z-index: 1000;
-    max-width: 250px;
-    text-align: center;
-    background: ${type === 'success' ? '#4CAF50' : '#f44336'};
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  `;
-  
-  notification.textContent = message;
-  document.body.appendChild(notification);
-  
-  // Animate in
-  notification.style.opacity = '0';
-  notification.style.transform = 'translateX(-50%) translateY(-10px)';
-  setTimeout(() => {
-    notification.style.transition = 'all 0.3s ease';
-    notification.style.opacity = '1';
-    notification.style.transform = 'translateX(-50%) translateY(0)';
-  }, 10);
-  
-  // Remove after 2 seconds
-  setTimeout(() => {
-    notification.style.opacity = '0';
-    notification.style.transform = 'translateX(-50%) translateY(-10px)';
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
-    }, 300);
-  }, 2000);
+// Update UI dengan error protection
+function updateUI() {
+  try {
+    // Update status circle
+    if (isActive) {
+      statusCircle.className = 'status-circle active';
+      statusCircle.textContent = '🚀';
+      statusText.textContent = 'MONITORING';
+      statusSub.textContent = 'Scanning for transcript URLs...';
+      toggleBtn.className = 'toggle-btn stop';
+      toggleBtn.textContent = '⏹️ STOP MONITORING';
+      extensionStatus.textContent = 'Active';
+    } else {
+      statusCircle.className = 'status-circle inactive';
+      statusCircle.textContent = '⏸️';
+      statusText.textContent = 'STOPPED';
+      statusSub.textContent = 'Click START to begin monitoring';
+      toggleBtn.className = 'toggle-btn start';
+      toggleBtn.textContent = '🚀 START MONITORING';
+      extensionStatus.textContent = 'Stopped';
+    }
+    
+    // Update mode buttons
+    clipboardBtn.classList.remove('active');
+    downloadBtn.classList.remove('active');
+    
+    if (currentMode === 'clipboard') {
+      clipboardBtn.classList.add('active');
+    } else {
+      downloadBtn.classList.add('active');
+    }
+    
+    // Update stats
+    detectedCount.textContent = stats.detected || 0;
+    processedCount.textContent = stats.processed || 0;
+    
+    console.log('🔄 UI updated:', { isActive, currentMode, stats });
+    
+  } catch (error) {
+    console.error('❌ Error updating UI:', error);
+  }
 }
 
-// Listen for messages dari background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'statsUpdate') {
-    stats = message.stats;
-    updateUI();
+// Show notification dengan error protection
+function showNotification(message, type) {
+  try {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      border-radius: 4px;
+      color: white;
+      font-size: 11px;
+      z-index: 1000;
+      max-width: 250px;
+      text-align: center;
+      background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      pointer-events: none;
+    `;
     
-    // Visual feedback untuk detection
-    if (message.type === 'detected') {
-      statusCircle.style.transform = 'scale(1.1)';
-      setTimeout(() => {
-        statusCircle.style.transform = '';
-      }, 200);
-    }
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Animate in
+    notification.style.opacity = '0';
+    setTimeout(() => {
+      notification.style.transition = 'all 0.3s ease';
+      notification.style.opacity = '1';
+    }, 10);
+    
+    // Remove after 2 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Error showing notification:', error);
   }
-  
-  if (message.action === 'stateUpdate') {
-    isActive = message.isActive;
-    currentMode = message.mode;
-    updateUI();
+}
+
+// Listen for messages dengan error protection
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  try {
+    if (message.action === 'statsUpdate') {
+      stats = message.stats || stats;
+      updateUI();
+      
+      // Visual feedback untuk detection
+      if (message.type === 'detected' && statusCircle) {
+        statusCircle.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+          statusCircle.style.transform = '';
+        }, 200);
+      }
+    }
+    
+    if (message.action === 'stateUpdate') {
+      isActive = message.isActive;
+      currentMode = message.mode;
+      updateUI();
+    }
+  } catch (error) {
+    console.error('Error handling message:', error);
   }
 });
 
-console.log('🎉 Simple Auto Transcript Collector popup loaded!');
+console.log('🎉 Simple Auto Transcript Collector popup loaded - FIXED VERSION!');
