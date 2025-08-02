@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Auto Transcript Collector",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Mendeteksi URL transkrip (?o=) dan secara otomatis mengambil kontennya.",
   "permissions": [
     "webRequest",
     "downloads",
     "clipboardWrite",
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -18,18 +19,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Auto Transcript Collector",
-    "default_icon": {
-      "16": "icon16.png",
-      "32": "icon32.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icon16.png",
-    "32": "icon32.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "default_title": "Auto Transcript Collector"
   }
 }
