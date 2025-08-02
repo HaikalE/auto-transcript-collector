@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Auto Transcript Collector",
+  "version": "1.0",
+  "description": "Mendeteksi URL transkrip (?o=) dan secara otomatis mengambil kontennya.",
+  "permissions": [
+    "webRequest",
+    "downloads",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
