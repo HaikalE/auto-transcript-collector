@@ -2,6 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -10,85 +13,126 @@
     }
     
     body {
-      width: 400px;
-      height: 600px;
-      padding: 15px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      width: 420px;
+      height: 650px;
+      padding: 20px;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #fbf4b6 0%, #b4e9ff 50%, #6d5c6f 100%);
+      color: #6d5c6f;
       user-select: none;
       overflow: hidden;
+      font-weight: 400;
     }
     
     .header {
       text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(109, 92, 111, 0.1);
     }
     
     .header h1 {
       margin: 0;
-      font-size: 16px;
+      font-size: 24px;
       font-weight: 600;
+      color: #6d5c6f;
+      font-family: 'Poppins', sans-serif;
+      letter-spacing: -0.5px;
     }
     
-    .header p {
-      margin: 5px 0 0 0;
-      font-size: 11px;
-      opacity: 0.9;
+    .header .subtitle {
+      margin: 8px 0 0 0;
+      font-size: 14px;
+      color: #6d5c6f;
+      opacity: 0.8;
+      font-family: 'Dancing Script', cursive;
+      font-weight: 500;
+      font-size: 16px;
     }
     
     .controls {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
     }
     
     .control-btn {
-      flex: 1;
-      padding: 10px;
+      padding: 12px 16px;
       border: none;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s ease;
       color: white;
       outline: none;
+      font-family: 'Poppins', sans-serif;
+      letter-spacing: 0.2px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     .start-btn {
-      background: #4CAF50;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
     }
     
     .start-btn:hover {
-      background: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     }
     
     .stop-btn {
-      background: #f44336;
+      background: linear-gradient(135deg, #f44336, #d32f2f);
     }
     
     .stop-btn:hover {
-      background: #da190b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
     }
     
-    .clear-btn, .export-btn {
-      background: rgba(255,255,255,0.2);
+    .clear-btn {
+      background: linear-gradient(135deg, #6d5c6f, #5a4a5d);
     }
     
-    .clear-btn:hover, .export-btn:hover {
-      background: rgba(255,255,255,0.3);
+    .clear-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(109, 92, 111, 0.3);
+    }
+    
+    .export-btn {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+    }
+    
+    .export-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    }
+    
+    .filter-info {
+      background: rgba(251, 244, 182, 0.9);
+      border: 1px solid #fbf4b6;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      text-align: center;
+      color: #6d5c6f;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(251, 244, 182, 0.3);
     }
     
     .stats {
-      background: rgba(255,255,255,0.15);
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 18px;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      font-size: 11px;
+      gap: 15px;
+      font-size: 12px;
+      box-shadow: 0 4px 15px rgba(109, 92, 111, 0.08);
     }
     
     .stats-item {
@@ -96,62 +140,63 @@
     }
     
     .stats-number {
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 20px;
+      font-weight: 700;
       display: block;
+      color: #6d5c6f;
+      font-family: 'Poppins', sans-serif;
     }
     
     .stats-label {
-      font-size: 9px;
-      opacity: 0.8;
-    }
-    
-    .filter-info {
-      background: rgba(255, 193, 7, 0.2);
-      border-radius: 6px;
-      padding: 8px;
-      margin-bottom: 10px;
-      font-size: 10px;
-      text-align: center;
-      border-left: 3px solid #FFC107;
+      font-size: 11px;
+      color: #6d5c6f;
+      opacity: 0.7;
+      font-weight: 500;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .url-list-container {
       flex: 1;
-      background: rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 15px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 380px;
+      height: 400px;
+      box-shadow: 0 6px 20px rgba(109, 92, 111, 0.1);
     }
     
     .url-list-header {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 10px;
-      padding-bottom: 5px;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #fbf4b6;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      color: #6d5c6f;
     }
     
     .quality-badge {
-      background: #4CAF50;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
       color: white;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 9px;
-      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .url-list {
       flex: 1;
       overflow-y: auto;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.3) transparent;
+      scrollbar-color: #b4e9ff transparent;
     }
     
     .url-list::-webkit-scrollbar {
@@ -159,32 +204,34 @@
     }
     
     .url-list::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.1);
+      background: #fbf4b6;
       border-radius: 3px;
     }
     
     .url-list::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.3);
+      background: #b4e9ff;
       border-radius: 3px;
     }
     
     .url-item {
-      background: rgba(255,255,255,0.1);
-      border-radius: 6px;
-      padding: 8px;
-      margin-bottom: 6px;
+      background: rgba(251, 244, 182, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
       cursor: pointer;
-      transition: all 0.2s;
-      border-left: 3px solid #4CAF50;
+      transition: all 0.3s ease;
+      border-left: 4px solid #4CAF50;
+      backdrop-filter: blur(5px);
     }
     
     .url-item:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateX(2px);
+      background: rgba(180, 233, 255, 0.4);
+      transform: translateX(4px);
+      box-shadow: 0 4px 15px rgba(109, 92, 111, 0.15);
     }
     
     .url-item:active {
-      transform: scale(0.98);
+      transform: scale(0.98) translateX(4px);
     }
     
     .url-item.stream {
@@ -199,137 +246,175 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
     
     .url-domain {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
-      color: #fff;
+      color: #6d5c6f;
     }
     
     .url-time {
       font-size: 10px;
-      opacity: 0.7;
+      color: #6d5c6f;
+      opacity: 0.6;
+      font-weight: 400;
     }
     
     .url-preview {
       font-size: 10px;
+      color: #6d5c6f;
       opacity: 0.8;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-family: monospace;
+      font-family: 'Courier New', monospace;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 4px 6px;
+      border-radius: 4px;
+      margin-bottom: 6px;
     }
     
     .url-badges {
-      margin-top: 4px;
       display: flex;
-      gap: 4px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
     
     .url-param {
       font-size: 9px;
-      background: rgba(76, 175, 80, 0.3);
-      padding: 2px 6px;
-      border-radius: 3px;
+      background: rgba(76, 175, 80, 0.2);
+      color: #4CAF50;
+      padding: 3px 8px;
+      border-radius: 12px;
       display: inline-block;
+      font-weight: 500;
+      border: 1px solid rgba(76, 175, 80, 0.3);
     }
     
     .url-type {
       font-size: 9px;
-      background: rgba(33, 150, 243, 0.3);
-      padding: 2px 6px;
-      border-radius: 3px;
+      background: rgba(33, 150, 243, 0.2);
+      color: #2196F3;
+      padding: 3px 8px;
+      border-radius: 12px;
       display: inline-block;
+      font-weight: 500;
+      border: 1px solid rgba(33, 150, 243, 0.3);
     }
     
     .empty-state {
       text-align: center;
-      padding: 40px 20px;
-      opacity: 0.7;
+      padding: 50px 20px;
+      color: #6d5c6f;
+      opacity: 0.6;
     }
     
     .empty-state-icon {
-      font-size: 32px;
-      margin-bottom: 10px;
+      font-size: 48px;
+      margin-bottom: 15px;
+      color: #b4e9ff;
+    }
+    
+    .empty-state-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-family: 'Dancing Script', cursive;
+    }
+    
+    .empty-state-subtitle {
+      font-size: 11px;
+      line-height: 1.4;
     }
     
     .footer {
       text-align: center;
-      margin-top: 10px;
-      font-size: 10px;
+      margin-top: 12px;
+      font-size: 11px;
+      color: #6d5c6f;
       opacity: 0.7;
+      font-weight: 400;
     }
     
     .status-indicator {
       display: inline-block;
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      margin-right: 5px;
+      margin-right: 8px;
     }
     
     .status-active {
-      background: #4CAF50;
-      box-shadow: 0 0 8px #4CAF50;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
     }
     
     .status-inactive {
       background: #f44336;
+      box-shadow: 0 0 5px rgba(244, 67, 54, 0.3);
+    }
+    
+    .formal-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #b4e9ff, transparent);
+      margin: 15px 0;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🛡️ Smart URL Monitor</h1>
-    <p>Filters out unwanted downloads automatically</p>
+    <h1>Smart URL Monitor</h1>
+    <div class="subtitle">Professional network request analyzer</div>
   </div>
   
   <div class="controls">
-    <button class="control-btn start-btn" id="toggleBtn">🚀 START</button>
-    <button class="control-btn clear-btn" id="clearBtn">🗑️ Clear</button>
-    <button class="control-btn export-btn" id="exportBtn">📄 Export</button>
+    <button class="control-btn start-btn" id="toggleBtn">Start Monitoring</button>
+    <button class="control-btn clear-btn" id="clearBtn">Clear</button>
+    <button class="control-btn export-btn" id="exportBtn">Export</button>
   </div>
   
   <div class="filter-info">
-    🛡️ Smart filtering prevents auto-downloads of range/chunk URLs
+    Intelligent filtering system prevents unwanted file downloads
   </div>
   
   <div class="stats">
     <div class="stats-item">
       <span class="stats-number" id="totalCount">0</span>
-      <span class="stats-label">Good URLs</span>
+      <div class="stats-label">Quality URLs</div>
     </div>
     <div class="stats-item">
       <span class="stats-number" id="filteredCount">0</span>
-      <span class="stats-label">Filtered</span>
+      <div class="stats-label">Filtered Out</div>
     </div>
     <div class="stats-item">
       <span class="stats-number" id="statusText">
         <span class="status-indicator status-inactive" id="statusDot"></span>
-        OFF
+        Offline
       </span>
-      <span class="stats-label">Status</span>
+      <div class="stats-label">System Status</div>
     </div>
   </div>
   
   <div class="url-list-container">
     <div class="url-list-header">
-      <span>🌐 Quality URLs (clickable)</span>
-      <span class="quality-badge">FILTERED</span>
+      <span>Detected Network Requests</span>
+      <span class="quality-badge">Filtered</span>
     </div>
     <div class="url-list" id="urlList">
       <div class="empty-state" id="emptyState">
-        <div class="empty-state-icon">🛡️</div>
-        <div>No quality URLs detected yet</div>
-        <div style="font-size: 9px; margin-top: 5px;">Smart filtering active - unwanted downloads prevented</div>
+        <div class="empty-state-icon">◇</div>
+        <div class="empty-state-title">No requests detected</div>
+        <div class="empty-state-subtitle">Start monitoring to begin capturing network requests with filtering parameters</div>
       </div>
     </div>
   </div>
   
+  <div class="formal-divider"></div>
+  
   <div class="footer">
-    Click any URL to open • Right-click to copy
+    Click any request to open in new tab • Right-click to copy URL
   </div>
   
   <script src="popup.js"></script>
