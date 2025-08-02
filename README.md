@@ -1,6 +1,21 @@
-# Auto Transcript Collector v2.0
+# Auto Transcript Collector v2.1 🔥
 
-🚀 **LIGHTWEIGHT & RESOURCE-EFFICIENT** Chrome extension untuk deteksi URL transkrip dengan parameter `?o=`. 
+🚀 **STABLE & LIGHTWEIGHT** Chrome extension untuk deteksi URL transkrip dengan parameter `?o=`. 
+
+## 🛠️ **HOTFIX v2.1 - CRASH FIXED!**
+
+**✅ FIXED Issues:**
+- ❌ ~~Popup freeze after clicking START~~
+- ❌ ~~Cursor stuck in pointer mode~~  
+- ❌ ~~Unresponsive UI elements~~
+- ❌ ~~JavaScript errors causing crashes~~
+
+**🔧 Improvements:**
+- ✅ **Proper error handling** in all functions
+- ✅ **Timeout protection** untuk prevent freeze
+- ✅ **Double-click prevention** 
+- ✅ **Fallback states** jika error
+- ✅ **Stable button interactions**
 
 ## ⚡ **SIMPLE START/STOP INTERFACE** - No More Resource Waste!
 
@@ -9,10 +24,11 @@ Extension ini sekarang **HANYA menggunakan resource saat diperlukan**! Default s
 ## 🎯 Key Features
 
 - **🔥 RESOURCE-EFFICIENT**: Default OFF - zero background resource usage
-- **▶️ START/STOP Control**: Simple toggle button 
+- **▶️ START/STOP Control**: Simple toggle button yang STABIL
 - **📋 Two Modes**: Clipboard copy atau Download file
 - **🎯 Smart Detection**: Hanya URL dengan parameter `?o=`
 - **📊 Simple Stats**: Basic monitoring tanpa bloat
+- **🛡️ CRASH-PROOF**: Extensive error handling
 
 ## 🚀 Cara Install
 
@@ -21,20 +37,21 @@ git clone https://github.com/HaikalE/auto-transcript-collector.git
 cd auto-transcript-collector
 ```
 
-1. Buka `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked"
-4. Pilih folder project
+1. **HAPUS extension lama** dari `chrome://extensions/` jika ada
+2. Buka `chrome://extensions/`
+3. Enable "Developer mode"
+4. Click "Load unpacked"
+5. Pilih folder project
 
 ## 💡 Cara Pakai (SUPER SIMPLE!)
 
 ### 1. **Klik Icon Extension** di toolbar
-### 2. **Tekan START** untuk mulai monitoring  
+### 2. **Tekan START** untuk mulai monitoring (STABLE!)
 ### 3. **Pilih Mode**: Clipboard atau Download
 ### 4. **Browse normal** - extension akan deteksi URL `?o=` otomatis
 ### 5. **Tekan STOP** saat selesai untuk save resource
 
-## ⚙️ Interface Popup
+## ⚙️ Interface Popup (STABLE VERSION)
 
 ```
 🎤 Auto Transcript Collector
@@ -46,7 +63,7 @@ cd auto-transcript-collector
 │  Scanning for URLs...   │
 └─────────────────────────┘
 
-     ⏹️ STOP MONITORING     ← Main toggle button
+     ⏹️ STOP MONITORING     ← Main toggle (WORKING!)
 
 📋 Action Mode
 ┌─────────────┬─────────────┐
@@ -59,33 +76,27 @@ Status: Active
 
 ## 🔥 Resource Management
 
-| State | Resource Usage | webRequest Listener |
-|-------|----------------|-------------------|
-| **STOPPED** | **🟢 MINIMAL** | ❌ Disabled |
-| **STARTED** | 🟡 Active | ✅ Enabled |
+| State | Resource Usage | webRequest Listener | UI Status |
+|-------|----------------|-------------------|-----------|
+| **STOPPED** | **🟢 MINIMAL** | ❌ Disabled | ✅ Responsive |
+| **STARTED** | 🟡 Active | ✅ Enabled | ✅ Responsive |
 
 **Extension cerdas**: Hanya consume resource saat explicitly di-START!
 
-## 🛠️ Technical Improvements v2.0
+## 🛡️ Stability Improvements v2.1
 
-### ❌ **Removed** (Resource Hogs):
-- ~~Manual URL input field~~
-- ~~Always-on webRequest listener~~
-- ~~Complex statistics tracking~~
-- ~~Heavy popup features~~
+### ❌ **Removed** (Crash Sources):
+- ~~Infinite loops in message handling~~
+- ~~Uncaught JavaScript errors~~
+- ~~Memory leaks in event listeners~~
+- ~~CSS cursor conflicts~~
 
-### ✅ **Added** (Lightweight):
-- Dynamic listener management
-- START/STOP resource control
-- Simple toggle interface
-- Minimal stats display
-
-## 📊 Performance Comparison
-
-| Version | Default State | Resource Usage | User Control |
-|---------|--------------|----------------|--------------|
-| v1.x | Always ON | 🔴 High | Limited |
-| **v2.0** | **OFF** | **🟢 Minimal** | **Full** |
+### ✅ **Added** (Stability):
+- **Try-catch blocks** di semua functions
+- **Timeout protection** untuk async operations
+- **isProcessing flags** untuk prevent double-clicks
+- **Fallback states** untuk error recovery
+- **Proper event cleanup**
 
 ## 🐛 Troubleshooting
 
@@ -94,22 +105,23 @@ Status: Active
 - ✅ URL harus ada parameter `?o=`
 - ✅ Check popup status
 
+### Popup freeze/crash (FIXED!)
+- ✅ **Issue RESOLVED in v2.1**
+- ✅ Try refresh browser jika masih ada masalah
+- ✅ Remove dan install ulang extension
+
 ### Resource usage tinggi
 - ✅ Click STOP saat tidak pakai
 - ✅ Default state = OFF
-
-### Popup tidak respond
-- ✅ Reload extension
-- ✅ Check permissions
 
 ## 💻 File Structure (Minimalist)
 
 ```
 auto-transcript-collector/
-├── manifest.json      # v2.0 config
-├── background.js      # Smart resource management
-├── popup.html         # Simple START/STOP UI
-├── popup.js           # Lightweight controls
+├── manifest.json      # v2.1 config (STABLE)
+├── background.js      # Smart resource + error handling
+├── popup.html         # Fixed CSS cursor issues
+├── popup.js           # Crash-proof controls
 └── README.md          # This file
 ```
 
@@ -120,18 +132,29 @@ auto-transcript-collector/
 - ✅ No external connections
 - ✅ **Smart resource management**
 - ✅ **Default OFF state**
+- ✅ **Crash-proof operation**
 
-## 🆚 Why v2.0?
+## 📋 Changelog v2.1
 
-**v1.x Problems:**
-- Always monitoring (resource waste)
-- Complex manual features
-- High background usage
+```
+[HOTFIX] 2.1 - Stability & Crash Fixes
+✅ Fixed: Popup freeze after START click
+✅ Fixed: Cursor stuck in pointer mode
+✅ Fixed: UI unresponsive issues
+✅ Added: Comprehensive error handling
+✅ Added: Double-click prevention
+✅ Added: Timeout protection
+✅ Improved: CSS button interactions
+```
 
-**v2.0 Solutions:**  
-- START/STOP control
-- Resource-efficient
-- Simple but effective
+## 🆚 Version Comparison
+
+| Issue | v2.0 | v2.1 |
+|-------|------|------|
+| Popup Freeze | ❌ Crash | ✅ Fixed |
+| Cursor Issues | ❌ Stuck | ✅ Fixed |
+| Error Handling | ⚠️ Basic | ✅ Comprehensive |
+| Stability | 🟡 Unstable | ✅ Rock Solid |
 
 ## 📄 License
 
@@ -139,19 +162,21 @@ MIT License - Free to use and modify.
 
 ## 🤝 Contributing
 
-Issues dan PRs welcome! Focus pada **simplicity** dan **efficiency**.
+Issues dan PRs welcome! Focus pada **stability** dan **efficiency**.
 
 ---
 
 ## 🎯 **TL;DR untuk yang Males Baca:**
 
-1. **Download & Install** extension
-2. **Klik icon** extension di toolbar
-3. **Tekan START** untuk mulai monitoring
-4. **Pilih mode** Clipboard/Download  
-5. **Browse normal** - otomatis detect `?o=` URLs
-6. **Tekan STOP** saat selesai
+1. **Download v2.1** (STABLE VERSION)
+2. **Remove extension lama** kalo ada
+3. **Install ulang** extension
+4. **Klik icon** extension di toolbar
+5. **Tekan START** (ga bakal freeze lagi!)
+6. **Pilih mode** Clipboard/Download  
+7. **Browse normal** - otomatis detect `?o=` URLs
+8. **Tekan STOP** saat selesai
 
-**Simple. Lightweight. Effective.** 🚀
+**Stable. Lightweight. Crash-Free.** 🛡️
 
 **Repository**: https://github.com/HaikalE/auto-transcript-collector
