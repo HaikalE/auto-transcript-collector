@@ -1,4 +1,4 @@
-// popup.js - FIXED VERSION - No more crashes!
+// popup.js - Filename Extractor v2.3
 
 // Elements
 const statusCircle = document.getElementById('statusCircle');
@@ -15,28 +15,25 @@ const extensionStatus = document.getElementById('extensionStatus');
 let isActive = false;
 let currentMode = 'clipboard';
 let stats = { detected: 0, processed: 0 };
-let isProcessing = false; // Prevent double clicks
+let isProcessing = false;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎉 Popup loading...');
+  console.log('🎉 Filename Extractor popup loading...');
   
-  // Load state dengan timeout untuk prevent freeze
   setTimeout(loadState, 100);
   
-  // Event listeners dengan proper error handling
   toggleBtn.addEventListener('click', handleToggleClick);
   clipboardBtn.addEventListener('click', () => handleModeClick('clipboard'));
   downloadBtn.addEventListener('click', () => handleModeClick('download'));
 });
 
-// Load state dari background dengan timeout protection
+// Load state from background
 function loadState() {
   try {
     chrome.runtime.sendMessage({ action: 'getState' }, function(response) {
       if (chrome.runtime.lastError) {
         console.error('Error loading state:', chrome.runtime.lastError.message);
-        // Set default state jika error
         isActive = false;
         currentMode = 'clipboard';
         stats = { detected: 0, processed: 0 };
@@ -51,7 +48,6 @@ function loadState() {
     });
   } catch (error) {
     console.error('Error in loadState:', error);
-    // Fallback ke default state
     isActive = false;
     currentMode = 'clipboard';
     stats = { detected: 0, processed: 0 };
@@ -59,7 +55,7 @@ function loadState() {
   }
 }
 
-// Handle toggle click dengan protection
+// Handle toggle click
 function handleToggleClick() {
   if (isProcessing) {
     console.log('⏳ Already processing, ignoring click');
@@ -90,12 +86,12 @@ function handleToggleClick() {
         isActive = newState;
         console.log('✅ Toggle successful, new state:', isActive);
         showNotification(
-          isActive ? '✅ Monitoring started!' : '⏹️ Monitoring stopped!',
+          isActive ? '✅ Filename scanning started!' : '⏹️ Scanning stopped!',
           'success'
         );
       } else {
         console.error('❌ Toggle failed:', response);
-        showNotification('❌ Failed to toggle monitoring', 'error');
+        showNotification('❌ Failed to toggle scanning', 'error');
       }
       
       updateUI();
@@ -109,7 +105,7 @@ function handleToggleClick() {
   }
 }
 
-// Handle mode click dengan protection
+// Handle mode click
 function handleModeClick(mode) {
   if (isProcessing) {
     console.log('⏳ Processing, ignoring mode click');
@@ -144,30 +140,30 @@ function handleModeClick(mode) {
   }, 150);
   
   showNotification(
-    `📋 Mode: ${mode === 'clipboard' ? 'Copy to Clipboard' : 'Download File'}`,
+    `📄 Mode: ${mode === 'clipboard' ? 'Copy filename to clipboard' : 'Save filename list'}`,
     'success'
   );
 }
 
-// Update UI dengan error protection
+// Update UI
 function updateUI() {
   try {
     // Update status circle
     if (isActive) {
       statusCircle.className = 'status-circle active';
-      statusCircle.textContent = '🚀';
-      statusText.textContent = 'MONITORING';
-      statusSub.textContent = 'Scanning for transcript URLs...';
+      statusCircle.textContent = '🔍';
+      statusText.textContent = 'SCANNING';
+      statusSub.textContent = 'Looking for transcript URLs...';
       toggleBtn.className = 'toggle-btn stop';
-      toggleBtn.textContent = '⏹️ STOP MONITORING';
+      toggleBtn.textContent = '⏹️ STOP SCANNING';
       extensionStatus.textContent = 'Active';
     } else {
       statusCircle.className = 'status-circle inactive';
       statusCircle.textContent = '⏸️';
       statusText.textContent = 'STOPPED';
-      statusSub.textContent = 'Click START to begin monitoring';
+      statusSub.textContent = 'Click START to scan for filenames';
       toggleBtn.className = 'toggle-btn start';
-      toggleBtn.textContent = '🚀 START MONITORING';
+      toggleBtn.textContent = '🚀 START SCANNING';
       extensionStatus.textContent = 'Stopped';
     }
     
@@ -192,7 +188,7 @@ function updateUI() {
   }
 }
 
-// Show notification dengan error protection
+// Show notification
 function showNotification(message, type) {
   try {
     const notification = document.createElement('div');
@@ -240,14 +236,14 @@ function showNotification(message, type) {
   }
 }
 
-// Listen for messages dengan error protection
+// Listen for messages from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   try {
     if (message.action === 'statsUpdate') {
       stats = message.stats || stats;
       updateUI();
       
-      // Visual feedback untuk detection
+      // Visual feedback for detection
       if (message.type === 'detected' && statusCircle) {
         statusCircle.style.transform = 'scale(1.1)';
         setTimeout(() => {
@@ -266,4 +262,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-console.log('🎉 Simple Auto Transcript Collector popup loaded - FIXED VERSION!');
+console.log('🎉 Filename Extractor popup loaded - ULTRA LIGHTWEIGHT!');
