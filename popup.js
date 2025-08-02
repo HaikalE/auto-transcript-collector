@@ -1,4 +1,4 @@
-// popup.js - Smart URL Monitor v3.1
+// popup.js - Smart URL Monitor v3.1 - Professional Edition
 
 // Elements
 const toggleBtn = document.getElementById('toggleBtn');
@@ -19,7 +19,7 @@ let isProcessing = false;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎉 Smart URL Monitor popup loading...');
+  console.log('Smart URL Monitor popup loading...');
   
   setTimeout(loadState, 100);
   
@@ -46,7 +46,7 @@ function loadState() {
       
       updateUI();
       renderUrlList();
-      console.log('✅ State loaded:', { isActive, urlCount: urls.length, stats });
+      console.log('State loaded:', { isActive, urlCount: urls.length, stats });
     });
   } catch (error) {
     console.error('Error in loadState:', error);
@@ -64,7 +64,7 @@ function handleToggleClick() {
   
   isProcessing = true;
   toggleBtn.disabled = true;
-  toggleBtn.textContent = isActive ? '⏳ STOPPING...' : '⏳ STARTING...';
+  toggleBtn.textContent = isActive ? 'STOPPING...' : 'STARTING...';
   
   const newState = !isActive;
   
@@ -77,41 +77,41 @@ function handleToggleClick() {
       toggleBtn.disabled = false;
       
       if (chrome.runtime.lastError) {
-        console.error('❌ Toggle error:', chrome.runtime.lastError.message);
-        showNotification('❌ Error: ' + chrome.runtime.lastError.message, 'error');
+        console.error('Toggle error:', chrome.runtime.lastError.message);
+        showNotification('Error: ' + chrome.runtime.lastError.message, 'error');
       } else if (response && response.success) {
         isActive = newState;
-        console.log('✅ Toggle successful, new state:', isActive);
+        console.log('Toggle successful, new state:', isActive);
         showNotification(
-          isActive ? '✅ Smart monitoring started!' : '⏹️ Monitoring stopped!',
+          isActive ? 'Smart monitoring started successfully' : 'Monitoring stopped',
           'success'
         );
       } else {
-        console.error('❌ Toggle failed:', response);
-        showNotification('❌ Failed to toggle monitoring', 'error');
+        console.error('Toggle failed:', response);
+        showNotification('Failed to toggle monitoring', 'error');
       }
       
       updateUI();
     });
   } catch (error) {
-    console.error('❌ Exception in toggle:', error);
+    console.error('Exception in toggle:', error);
     isProcessing = false;
     toggleBtn.disabled = false;
-    showNotification('❌ Error: ' + error.message, 'error');
+    showNotification('Error: ' + error.message, 'error');
     updateUI();
   }
 }
 
 // Handle clear URLs
 function handleClearClick() {
-  if (confirm('Clear all collected URLs and reset filter stats?')) {
+  if (confirm('Clear all collected URLs and reset filter statistics?')) {
     chrome.runtime.sendMessage({ action: 'clearUrls' }, function(response) {
       if (response && response.success) {
         urls = [];
         stats = { detected: 0, filtered: 0, total: 0 };
         updateUI();
         renderUrlList();
-        showNotification('🗑️ URLs cleared & stats reset!', 'success');
+        showNotification('URLs cleared and statistics reset successfully', 'success');
       }
     });
   }
@@ -120,15 +120,15 @@ function handleClearClick() {
 // Handle export URLs
 function handleExportClick() {
   if (urls.length === 0) {
-    showNotification('⚠️ No quality URLs to export', 'error');
+    showNotification('No quality URLs available for export', 'warning');
     return;
   }
   
   chrome.runtime.sendMessage({ action: 'exportUrls' }, function(response) {
     if (response && response.success) {
-      showNotification(`📄 ${urls.length} quality URLs exported!`, 'success');
+      showNotification(`${urls.length} quality URLs exported successfully`, 'success');
     } else {
-      showNotification('❌ Export failed', 'error');
+      showNotification('Export operation failed', 'error');
     }
   });
 }
@@ -139,22 +139,22 @@ function updateUI() {
     // Update toggle button
     if (isActive) {
       toggleBtn.className = 'control-btn stop-btn';
-      toggleBtn.textContent = '⏹️ STOP';
-      statusText.innerHTML = '<span class="status-indicator status-active"></span>ON';
+      toggleBtn.textContent = 'STOP MONITORING';
+      statusText.innerHTML = '<span class="status-indicator status-active"></span>ACTIVE';
     } else {
       toggleBtn.className = 'control-btn start-btn';
-      toggleBtn.textContent = '🚀 START';
-      statusText.innerHTML = '<span class="status-indicator status-inactive"></span>OFF';
+      toggleBtn.textContent = 'START MONITORING';
+      statusText.innerHTML = '<span class="status-indicator status-inactive"></span>INACTIVE';
     }
     
     // Update stats
     totalCount.textContent = stats.total || 0;
     filteredCount.textContent = stats.filtered || 0;
     
-    console.log('🔄 UI updated:', { isActive, stats });
+    console.log('UI updated:', { isActive, stats });
     
   } catch (error) {
-    console.error('❌ Error updating UI:', error);
+    console.error('Error updating UI:', error);
   }
 }
 
@@ -181,10 +181,10 @@ function renderUrlList() {
       urlList.appendChild(urlElement);
     });
     
-    console.log('📝 URL list rendered:', urls.length, 'quality items');
+    console.log('URL list rendered:', urls.length, 'quality items');
     
   } catch (error) {
-    console.error('❌ Error rendering URL list:', error);
+    console.error('Error rendering URL list:', error);
   }
 }
 
@@ -207,7 +207,7 @@ function createUrlElement(urlItem, index) {
   if (urlItem.oParam) {
     const paramPreview = urlItem.oParam.length > 15 ? 
       urlItem.oParam.substring(0, 15) + '...' : urlItem.oParam;
-    badges += `<span class="url-param">?o=${paramPreview}</span>`;
+    badges += `<span class="url-param">o=${paramPreview}</span>`;
   }
   if (urlItem.urlType && urlItem.urlType !== 'stream') {
     badges += `<span class="url-type">${urlItem.urlType}</span>`;
@@ -229,7 +229,7 @@ function createUrlElement(urlItem, index) {
       url: urlItem.url 
     }, function(response) {
       if (response && response.success) {
-        showNotification('🌐 Quality URL opened in new tab', 'success');
+        showNotification('Quality URL opened in new tab', 'success');
       }
     });
   });
@@ -238,7 +238,7 @@ function createUrlElement(urlItem, index) {
   div.addEventListener('contextmenu', function(e) {
     e.preventDefault();
     navigator.clipboard.writeText(urlItem.url).then(() => {
-      showNotification('📋 URL copied to clipboard', 'success');
+      showNotification('URL copied to clipboard', 'success');
     }).catch(err => {
       console.error('Copy failed:', err);
     });
@@ -251,21 +251,41 @@ function createUrlElement(urlItem, index) {
 function showNotification(message, type) {
   try {
     const notification = document.createElement('div');
+    
+    let backgroundColor;
+    switch(type) {
+      case 'success':
+        backgroundColor = '#6d5c6f';
+        break;
+      case 'error':
+        backgroundColor = '#8B5A3C';
+        break;
+      case 'warning':
+        backgroundColor = '#9A8B73';
+        break;
+      default:
+        backgroundColor = '#6d5c6f';
+    }
+    
     notification.style.cssText = `
       position: fixed;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      padding: 8px 12px;
-      border-radius: 4px;
-      color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      color: #fbf4b6;
       font-size: 11px;
       z-index: 1000;
       max-width: 350px;
       text-align: center;
-      background: ${type === 'success' ? '#4CAF50' : '#f44336'};
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      background: ${backgroundColor};
+      box-shadow: 0 4px 16px rgba(109, 92, 111, 0.3);
       pointer-events: none;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(251, 244, 182, 0.2);
     `;
     
     notification.textContent = message;
@@ -278,7 +298,7 @@ function showNotification(message, type) {
       notification.style.opacity = '1';
     }, 10);
     
-    // Remove after 2.5 seconds
+    // Remove after 3 seconds
     setTimeout(() => {
       if (notification.parentNode) {
         notification.style.opacity = '0';
@@ -288,7 +308,7 @@ function showNotification(message, type) {
           }
         }, 300);
       }
-    }, 2500);
+    }, 3000);
     
   } catch (error) {
     console.error('Error showing notification:', error);
@@ -317,7 +337,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       
       // Visual feedback with URL type
       const urlType = message.data.urlType || 'stream';
-      showNotification(`🛡️ Quality ${urlType} URL detected: ${message.data.domain}`, 'success');
+      showNotification(`Quality ${urlType} URL detected: ${message.data.domain}`, 'success');
     }
     
     if (message.action === 'stateUpdate') {
@@ -332,4 +352,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-console.log('🎉 Smart URL Monitor popup loaded - Intelligent filtering active!');
+console.log('Smart URL Monitor popup loaded - Professional monitoring interface active');
