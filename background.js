@@ -1,285 +1,207 @@
 // Chrome Extension: Auto Transcript Collector
-// HOTFIX - Stable version with proper error handling
+// v2.2 - PROPER FIX: Non-blocking architecture using onCompleted
 
 // Global state
 let isMonitoring = false;
 let currentMode = 'clipboard';
 let stats = { detected: 0, processed: 0 };
-let requestListener = null;
 
-// Initialize extension
-chrome.runtime.onStartup.addListener(initialize);
-chrome.runtime.onInstalled.addListener(initialize);
-
-function initialize() {
+// Initialize extension with proper async pattern
+async function initialize() {
   console.log('🚀 Extension initializing...');
   
-  // Load saved settings dengan error handling
   try {
-    chrome.storage.sync.get(['mode'], function(result) {
-      if (chrome.runtime.lastError) {
-        console.error('Error loading mode:', chrome.runtime.lastError.message);
-        currentMode = 'clipboard'; // fallback
-      } else if (result.mode) {
-        currentMode = result.mode;
-      }
-      console.log('📋 Mode loaded:', currentMode);
-    });
+    // Use Promise-based loading for cleaner code
+    const settings = await chrome.storage.sync.get(['mode']);
+    const localData = await chrome.storage.local.get(['stats']);
+
+    currentMode = settings.mode || 'clipboard';
+    stats = localData.stats || { detected: 0, processed: 0 };
     
-    chrome.storage.local.get(['stats'], function(result) {
-      if (chrome.runtime.lastError) {
-        console.error('Error loading stats:', chrome.runtime.lastError.message);
-        stats = { detected: 0, processed: 0 }; // fallback
-      } else if (result.stats) {
-        stats = result.stats;
-      }
-      console.log('📊 Stats loaded:', stats);
-    });
+    isMonitoring = false; // Always start in OFF state
+    
+    console.log('📋 Mode loaded:', currentMode);
+    console.log('📊 Stats loaded:', stats);
+    console.log('✅ Extension initialized - Monitoring OFF');
   } catch (error) {
-    console.error('Error in initialize:', error);
+    console.error('❌ Initialization error:', error);
     // Set fallback values
     currentMode = 'clipboard';
     stats = { detected: 0, processed: 0 };
   }
+}
+
+// NON-BLOCKING listener for completed requests - THE KEY FIX!
+const requestListener = (details) => {
+  // Only detect and update stats here - NO BLOCKING OPERATIONS!
+  console.log('🎯 URL transkrip terdeteksi (onCompleted):', details.url);
   
-  // IMPORTANT: Start dengan monitoring OFF
-  isMonitoring = false;
-  console.log('✅ Extension initialized - Monitoring OFF (resource-efficient)');
-}
+  stats.detected++;
+  stats.lastActivity = Date.now();
+  saveStats();
+  updatePopupStats('detected');
 
-// Create webRequest listener function
-function createRequestListener() {
-  return function(details) {
-    try {
-      console.log('🎯 URL transkrip terdeteksi:', details.url);
-      
-      // Update stats dengan error handling
-      stats.detected++;
-      stats.lastActivity = Date.now();
-      saveStats();
-      
-      // Send stats update ke popup (dengan error handling)
-      try {
-        chrome.runtime.sendMessage({
-          action: 'statsUpdate',
-          stats: stats,
-          type: 'detected'
-        });
-      } catch (error) {
-        console.log('Info: Popup not open, message not sent');
-      }
-      
-      // Process berdasarkan mode yang aktif
-      if (currentMode === 'clipboard') {
-        copyContentToClipboard(details.url);
-      } else {
-        downloadContentAsFile(details.url);
-      }
-    } catch (error) {
-      console.error('❌ Error in request listener:', error);
-    }
-  };
-}
+  // Process content ASYNCHRONOUSLY without blocking anything
+  processContent(details.url);
+};
 
-// START monitoring - Enable webRequest listener
-function startMonitoring() {
+// Separate async function for heavy work (fetch, copy, download)
+async function processContent(url) {
   try {
-    if (!isMonitoring) {
-      requestListener = createRequestListener();
-      
-      chrome.webRequest.onBeforeRequest.addListener(
-        requestListener,
-        { urls: ["*://*/*?o=*"] }
-      );
-      
-      isMonitoring = true;
-      console.log('✅ Monitoring STARTED');
-      return true;
+    console.log('⚙️ Processing content from:', url);
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    return false;
-  } catch (error) {
-    console.error('❌ Error starting monitoring:', error);
-    return false;
-  }
-}
+    
+    const content = await response.text();
 
-// STOP monitoring - Remove webRequest listener
-function stopMonitoring() {
-  try {
-    if (isMonitoring && requestListener) {
-      chrome.webRequest.onBeforeRequest.removeListener(requestListener);
-      requestListener = null;
-      isMonitoring = false;
-      console.log('⏹️ Monitoring STOPPED');
-      return true;
+    if (currentMode === 'clipboard') {
+      await copyContentToClipboard(content);
+    } else {
+      await downloadContentAsFile(url);
     }
-    return false;
-  } catch (error) {
-    console.error('❌ Error stopping monitoring:', error);
-    return false;
-  }
-}
 
-// Save statistics dengan error handling
-function saveStats() {
-  try {
-    chrome.storage.local.set({ stats: stats });
+    // Update stats after successful processing
+    stats.processed++;
+    saveStats();
+    updatePopupStats('processed');
+    
+    console.log('✅ Content processed successfully');
+
   } catch (error) {
-    console.error('Error saving stats:', error);
+    console.error(`❌ Failed to process content from ${url}:`, error);
   }
 }
 
 // Copy content to clipboard
-async function copyContentToClipboard(url) {
+async function copyContentToClipboard(text) {
   try {
-    console.log('📋 Processing for clipboard:', url);
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const content = await response.text();
-    
-    // Get active tab and inject script dengan error handling
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    if (tabs.length > 0) {
+    if (tab) {
       await chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        func: (text) => {
-          try {
-            navigator.clipboard.writeText(text);
-          } catch (e) {
-            console.error('Clipboard error:', e);
-          }
-        },
-        args: [content]
+        target: { tabId: tab.id },
+        func: (contentToCopy) => navigator.clipboard.writeText(contentToCopy),
+        args: [text]
       });
+      console.log('✅ Content copied to clipboard!');
+    } else {
+      throw new Error('No active tab found');
     }
-    
-    console.log('✅ Content copied to clipboard!');
-    
-    // Update stats
-    stats.processed++;
-    saveStats();
-    
-    // Send success ke popup
-    try {
-      chrome.runtime.sendMessage({
-        action: 'statsUpdate',
-        stats: stats,
-        type: 'processed'
-      });
-    } catch (error) {
-      console.log('Info: Popup not open');
-    }
-    
   } catch (error) {
-    console.error('❌ Clipboard error:', error);
+    console.error('❌ Failed to copy to clipboard:', error);
   }
 }
 
 // Download content as file
-function downloadContentAsFile(url) {
+async function downloadContentAsFile(url) {
   try {
     const timestamp = new Date().getTime();
     const filename = `transkrip-${timestamp}.txt`;
     
-    console.log('💾 Downloading:', url);
-    
     chrome.downloads.download({
       url: url,
       filename: filename
-    }, function(downloadId) {
-      if (chrome.runtime.lastError) {
-        console.error('❌ Download error:', chrome.runtime.lastError.message);
-      } else {
-        console.log('✅ File downloaded:', filename);
-        
-        // Update stats
-        stats.processed++;
-        saveStats();
-        
-        // Send success ke popup
-        try {
-          chrome.runtime.sendMessage({
-            action: 'statsUpdate',
-            stats: stats,
-            type: 'processed'
-          });
-        } catch (error) {
-          console.log('Info: Popup not open');
-        }
-      }
     });
+    
+    console.log('✅ Download started:', filename);
   } catch (error) {
-    console.error('❌ Download error:', error);
+    console.error('❌ Failed to start download:', error);
   }
 }
 
-// Handle messages dari popup dengan extensive error handling
+// Save statistics
+function saveStats() {
+  chrome.storage.local.set({ stats: stats });
+}
+
+// Update popup with minimal error handling
+function updatePopupStats(type) {
+  chrome.runtime.sendMessage({
+    action: 'statsUpdate',
+    stats: stats,
+    type: type
+  }).catch(error => {
+    // Only log if it's not the common "popup not open" error
+    if (!error.message.includes("Could not establish connection")) {
+      console.warn("Message sending error:", error);
+    }
+  });
+}
+
+// START monitoring - Use onCompleted instead of onBeforeRequest!
+function startMonitoring() {
+  if (isMonitoring) return false;
+
+  // THE KEY FIX: Use onCompleted which is NON-BLOCKING!
+  chrome.webRequest.onCompleted.addListener(
+    requestListener,
+    { urls: ["*://*/*?o=*"] }
+  );
+  
+  isMonitoring = true;
+  console.log('✅ Monitoring STARTED (non-blocking)');
+  return true;
+}
+
+// STOP monitoring
+function stopMonitoring() {
+  if (!isMonitoring) return false;
+  
+  chrome.webRequest.onCompleted.removeListener(requestListener);
+  isMonitoring = false;
+  console.log('⏹️ Monitoring STOPPED');
+  return true;
+}
+
+// Handle messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  try {
-    console.log('📨 Message received:', message);
-    
-    if (message.action === 'toggleMonitoring') {
+  switch (message.action) {
+    case 'toggleMonitoring':
       let success = false;
       
       if (message.isActive) {
         success = startMonitoring();
+        if (success && message.mode) {
+          currentMode = message.mode;
+          chrome.storage.sync.set({ mode: currentMode });
+        }
       } else {
         success = stopMonitoring();
       }
       
-      // Update mode if provided
-      if (message.mode && success) {
-        currentMode = message.mode;
-        try {
-          chrome.storage.sync.set({ mode: currentMode });
-        } catch (error) {
-          console.error('Error saving mode:', error);
-        }
-      }
-      
       sendResponse({ success: success });
-    }
-    
-    else if (message.action === 'setMode') {
-      try {
-        currentMode = message.mode;
-        chrome.storage.sync.set({ mode: currentMode });
-        console.log('🔄 Mode updated to:', currentMode);
-        sendResponse({ success: true });
-      } catch (error) {
-        console.error('Error setting mode:', error);
-        sendResponse({ success: false, error: error.message });
-      }
-    }
-    
-    else if (message.action === 'getState') {
+      break;
+
+    case 'setMode':
+      currentMode = message.mode;
+      chrome.storage.sync.set({ mode: currentMode });
+      console.log('🔄 Mode updated to:', currentMode);
+      sendResponse({ success: true });
+      break;
+
+    case 'getState':
       sendResponse({
         isActive: isMonitoring,
         mode: currentMode,
         stats: stats
       });
-    }
-    
-    else {
-      console.log('Unknown action:', message.action);
+      break;
+      
+    default:
+      console.warn('Unknown action:', message.action);
       sendResponse({ success: false, error: 'Unknown action' });
-    }
-    
-  } catch (error) {
-    console.error('❌ Error handling message:', error);
-    sendResponse({ success: false, error: error.message });
   }
   
-  return true; // Indicates async response
+  return true;
 });
 
-// Initialize on load
+// Initialize when extension loads
+chrome.runtime.onStartup.addListener(initialize);
+chrome.runtime.onInstalled.addListener(initialize);
 initialize();
 
-console.log('🎯 Auto Transcript Collector ready - STABLE VERSION');
-console.log('💡 Monitoring is OFF by default - Click START to begin');
+console.log('🎯 Auto Transcript Collector v2.2 - NON-BLOCKING ARCHITECTURE');
+console.log('💡 Using onCompleted instead of onBeforeRequest for stability');
