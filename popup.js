@@ -1,31 +1,32 @@
-// popup.js - Filename Extractor v2.3
+// popup.js - URL Monitor v3.0
 
 // Elements
-const statusCircle = document.getElementById('statusCircle');
-const statusText = document.getElementById('statusText');
-const statusSub = document.getElementById('statusSub');
 const toggleBtn = document.getElementById('toggleBtn');
-const clipboardBtn = document.getElementById('clipboardBtn');
-const downloadBtn = document.getElementById('downloadBtn');
+const clearBtn = document.getElementById('clearBtn');
+const exportBtn = document.getElementById('exportBtn');
+const totalCount = document.getElementById('totalCount');
 const detectedCount = document.getElementById('detectedCount');
-const processedCount = document.getElementById('processedCount');
-const extensionStatus = document.getElementById('extensionStatus');
+const statusText = document.getElementById('statusText');
+const statusDot = document.getElementById('statusDot');
+const urlList = document.getElementById('urlList');
+const emptyState = document.getElementById('emptyState');
 
 // State
 let isActive = false;
-let currentMode = 'clipboard';
-let stats = { detected: 0, processed: 0 };
+let urls = [];
+let stats = { detected: 0, total: 0 };
 let isProcessing = false;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎉 Filename Extractor popup loading...');
+  console.log('🎉 URL Monitor popup loading...');
   
   setTimeout(loadState, 100);
   
+  // Event listeners
   toggleBtn.addEventListener('click', handleToggleClick);
-  clipboardBtn.addEventListener('click', () => handleModeClick('clipboard'));
-  downloadBtn.addEventListener('click', () => handleModeClick('download'));
+  clearBtn.addEventListener('click', handleClearClick);
+  exportBtn.addEventListener('click', handleExportClick);
 });
 
 // Load state from background
@@ -35,46 +36,42 @@ function loadState() {
       if (chrome.runtime.lastError) {
         console.error('Error loading state:', chrome.runtime.lastError.message);
         isActive = false;
-        currentMode = 'clipboard';
-        stats = { detected: 0, processed: 0 };
+        urls = [];
+        stats = { detected: 0, total: 0 };
       } else if (response) {
         isActive = response.isActive || false;
-        currentMode = response.mode || 'clipboard';
-        stats = response.stats || { detected: 0, processed: 0 };
+        urls = response.urls || [];
+        stats = response.stats || { detected: 0, total: 0 };
       }
       
       updateUI();
-      console.log('✅ State loaded:', { isActive, currentMode, stats });
+      renderUrlList();
+      console.log('✅ State loaded:', { isActive, urlCount: urls.length, stats });
     });
   } catch (error) {
     console.error('Error in loadState:', error);
     isActive = false;
-    currentMode = 'clipboard';
-    stats = { detected: 0, processed: 0 };
+    urls = [];
+    stats = { detected: 0, total: 0 };
     updateUI();
+    renderUrlList();
   }
 }
 
-// Handle toggle click
+// Handle toggle monitoring
 function handleToggleClick() {
-  if (isProcessing) {
-    console.log('⏳ Already processing, ignoring click');
-    return;
-  }
+  if (isProcessing) return;
   
   isProcessing = true;
   toggleBtn.disabled = true;
   toggleBtn.textContent = isActive ? '⏳ STOPPING...' : '⏳ STARTING...';
-  
-  console.log('🔄 Toggle clicked, current state:', isActive);
   
   const newState = !isActive;
   
   try {
     chrome.runtime.sendMessage({
       action: 'toggleMonitoring',
-      isActive: newState,
-      mode: currentMode
+      isActive: newState
     }, function(response) {
       isProcessing = false;
       toggleBtn.disabled = false;
@@ -86,12 +83,12 @@ function handleToggleClick() {
         isActive = newState;
         console.log('✅ Toggle successful, new state:', isActive);
         showNotification(
-          isActive ? '✅ Filename scanning started!' : '⏹️ Scanning stopped!',
+          isActive ? '✅ URL monitoring started!' : '⏹️ Monitoring stopped!',
           'success'
         );
       } else {
         console.error('❌ Toggle failed:', response);
-        showNotification('❌ Failed to toggle scanning', 'error');
+        showNotification('❌ Failed to toggle monitoring', 'error');
       }
       
       updateUI();
@@ -105,87 +102,140 @@ function handleToggleClick() {
   }
 }
 
-// Handle mode click
-function handleModeClick(mode) {
-  if (isProcessing) {
-    console.log('⏳ Processing, ignoring mode click');
+// Handle clear URLs
+function handleClearClick() {
+  if (confirm('Clear all collected URLs?')) {
+    chrome.runtime.sendMessage({ action: 'clearUrls' }, function(response) {
+      if (response && response.success) {
+        urls = [];
+        stats = { detected: 0, total: 0 };
+        updateUI();
+        renderUrlList();
+        showNotification('🗑️ URLs cleared!', 'success');
+      }
+    });
+  }
+}
+
+// Handle export URLs
+function handleExportClick() {
+  if (urls.length === 0) {
+    showNotification('⚠️ No URLs to export', 'error');
     return;
   }
   
-  console.log('🎯 Mode clicked:', mode);
-  currentMode = mode;
-  
-  try {
-    chrome.runtime.sendMessage({
-      action: 'setMode',
-      mode: currentMode
-    }, function(response) {
-      if (chrome.runtime.lastError) {
-        console.error('Error setting mode:', chrome.runtime.lastError.message);
-      } else {
-        console.log('✅ Mode set to:', currentMode);
-      }
-    });
-  } catch (error) {
-    console.error('Error in setMode:', error);
-  }
-  
-  updateUI();
-  
-  // Visual feedback
-  const btn = mode === 'clipboard' ? clipboardBtn : downloadBtn;
-  btn.style.transform = 'scale(0.95)';
-  setTimeout(() => {
-    btn.style.transform = '';
-  }, 150);
-  
-  showNotification(
-    `📄 Mode: ${mode === 'clipboard' ? 'Copy filename to clipboard' : 'Save filename list'}`,
-    'success'
-  );
+  chrome.runtime.sendMessage({ action: 'exportUrls' }, function(response) {
+    if (response && response.success) {
+      showNotification('📄 URLs exported successfully!', 'success');
+    } else {
+      showNotification('❌ Export failed', 'error');
+    }
+  });
 }
 
-// Update UI
+// Update UI elements
 function updateUI() {
   try {
-    // Update status circle
+    // Update toggle button
     if (isActive) {
-      statusCircle.className = 'status-circle active';
-      statusCircle.textContent = '🔍';
-      statusText.textContent = 'SCANNING';
-      statusSub.textContent = 'Looking for transcript URLs...';
-      toggleBtn.className = 'toggle-btn stop';
-      toggleBtn.textContent = '⏹️ STOP SCANNING';
-      extensionStatus.textContent = 'Active';
+      toggleBtn.className = 'control-btn stop-btn';
+      toggleBtn.textContent = '⏹️ STOP';
+      statusText.innerHTML = '<span class="status-indicator status-active" id="statusDot"></span>ACTIVE';
+      statusDot.className = 'status-indicator status-active';
     } else {
-      statusCircle.className = 'status-circle inactive';
-      statusCircle.textContent = '⏸️';
-      statusText.textContent = 'STOPPED';
-      statusSub.textContent = 'Click START to scan for filenames';
-      toggleBtn.className = 'toggle-btn start';
-      toggleBtn.textContent = '🚀 START SCANNING';
-      extensionStatus.textContent = 'Stopped';
-    }
-    
-    // Update mode buttons
-    clipboardBtn.classList.remove('active');
-    downloadBtn.classList.remove('active');
-    
-    if (currentMode === 'clipboard') {
-      clipboardBtn.classList.add('active');
-    } else {
-      downloadBtn.classList.add('active');
+      toggleBtn.className = 'control-btn start-btn';
+      toggleBtn.textContent = '🚀 START';
+      statusText.innerHTML = '<span class="status-indicator status-inactive" id="statusDot"></span>STOPPED';
+      statusDot.className = 'status-indicator status-inactive';
     }
     
     // Update stats
+    totalCount.textContent = stats.total || 0;
     detectedCount.textContent = stats.detected || 0;
-    processedCount.textContent = stats.processed || 0;
     
-    console.log('🔄 UI updated:', { isActive, currentMode, stats });
+    console.log('🔄 UI updated:', { isActive, stats });
     
   } catch (error) {
     console.error('❌ Error updating UI:', error);
   }
+}
+
+// Render URL list
+function renderUrlList() {
+  try {
+    if (urls.length === 0) {
+      urlList.innerHTML = '';
+      urlList.appendChild(emptyState);
+      return;
+    }
+    
+    // Hide empty state
+    if (emptyState.parentNode) {
+      emptyState.parentNode.removeChild(emptyState);
+    }
+    
+    // Clear current list
+    urlList.innerHTML = '';
+    
+    // Render URLs
+    urls.forEach((urlItem, index) => {
+      const urlElement = createUrlElement(urlItem, index);
+      urlList.appendChild(urlElement);
+    });
+    
+    console.log('📝 URL list rendered:', urls.length, 'items');
+    
+  } catch (error) {
+    console.error('❌ Error rendering URL list:', error);
+  }
+}
+
+// Create URL element
+function createUrlElement(urlItem, index) {
+  const div = document.createElement('div');
+  div.className = 'url-item';
+  div.setAttribute('data-url', urlItem.url);
+  
+  // Truncate long domains
+  const domain = urlItem.domain.length > 30 ? 
+    urlItem.domain.substring(0, 27) + '...' : urlItem.domain;
+  
+  // Truncate long URLs for preview
+  const urlPreview = urlItem.url.length > 60 ? 
+    urlItem.url.substring(0, 57) + '...' : urlItem.url;
+  
+  div.innerHTML = `
+    <div class="url-header">
+      <div class="url-domain">${domain}</div>
+      <div class="url-time">${urlItem.timeString}</div>
+    </div>
+    <div class="url-preview">${urlPreview}</div>
+    ${urlItem.oParam ? `<div class="url-param">?o=${urlItem.oParam.substring(0, 20)}${urlItem.oParam.length > 20 ? '...' : ''}</div>` : ''}
+  `;
+  
+  // Click handler to open URL
+  div.addEventListener('click', function() {
+    chrome.runtime.sendMessage({ 
+      action: 'openUrl', 
+      url: urlItem.url 
+    }, function(response) {
+      if (response && response.success) {
+        showNotification('🌐 URL opened in new tab', 'success');
+      }
+    });
+  });
+  
+  // Right-click to copy URL
+  div.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    navigator.clipboard.writeText(urlItem.url).then(() => {
+      showNotification('📋 URL copied to clipboard', 'success');
+    }).catch(err => {
+      console.error('Copy failed:', err);
+    });
+  });
+  
+  return div;
 }
 
 // Show notification
@@ -202,7 +252,7 @@ function showNotification(message, type) {
       color: white;
       font-size: 11px;
       z-index: 1000;
-      max-width: 250px;
+      max-width: 350px;
       text-align: center;
       background: ${type === 'success' ? '#4CAF50' : '#f44336'};
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
@@ -239,27 +289,37 @@ function showNotification(message, type) {
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   try {
-    if (message.action === 'statsUpdate') {
-      stats = message.stats || stats;
-      updateUI();
-      
-      // Visual feedback for detection
-      if (message.type === 'detected' && statusCircle) {
-        statusCircle.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-          statusCircle.style.transform = '';
-        }, 200);
+    if (message.action === 'urlDetected') {
+      // Add new URL to the beginning of the list
+      if (message.data) {
+        urls.unshift(message.data);
+        // Keep only latest 20 URLs for performance
+        if (urls.length > 20) {
+          urls = urls.slice(0, 20);
+        }
       }
+      
+      // Update stats
+      stats = message.stats || stats;
+      
+      // Update UI
+      updateUI();
+      renderUrlList();
+      
+      // Visual feedback
+      showNotification(`🎯 New URL detected: ${message.data.domain}`, 'success');
     }
     
     if (message.action === 'stateUpdate') {
       isActive = message.isActive;
-      currentMode = message.mode;
+      stats = message.stats;
+      urls = message.urls || [];
       updateUI();
+      renderUrlList();
     }
   } catch (error) {
     console.error('Error handling message:', error);
   }
 });
 
-console.log('🎉 Filename Extractor popup loaded - ULTRA LIGHTWEIGHT!');
+console.log('🎉 URL Monitor popup loaded - DevTools Network automation!');
