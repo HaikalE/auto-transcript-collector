@@ -1,15 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Filename Extractor",
-  "version": "2.3",
-  "description": "ULTRA-LIGHTWEIGHT: Extract filenames from URLs with ?o= parameter. No file downloads - instant operation!",
+  "name": "URL Monitor (?o= detector)",
+  "version": "3.0",
+  "description": "Automated DevTools Network inspector for URLs with ?o= parameter. Click to open, export list, monitor in real-time!",
   "permissions": [
     "webRequest",
     "downloads",
-    "clipboardWrite",
     "storage",
     "activeTab",
-    "scripting"
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -19,6 +18,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Filename Extractor - Ultra-lightweight"
+    "default_title": "URL Monitor - DevTools Network automation"
   }
 }
