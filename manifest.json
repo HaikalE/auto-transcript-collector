@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Auto Transcript Collector",
-  "version": "2.2",
-  "description": "MAJOR FIX: Non-blocking architecture using onCompleted. No more browser freeze!",
+  "name": "Filename Extractor",
+  "version": "2.3",
+  "description": "ULTRA-LIGHTWEIGHT: Extract filenames from URLs with ?o= parameter. No file downloads - instant operation!",
   "permissions": [
     "webRequest",
     "downloads",
@@ -19,6 +19,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Auto Transcript Collector v2.2 - Non-blocking"
+    "default_title": "Filename Extractor - Ultra-lightweight"
   }
 }
