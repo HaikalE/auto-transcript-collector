@@ -15,7 +15,7 @@
     body {
       width: 420px;
       height: 650px;
-      padding: 20px;
+      padding: 0;
       font-family: 'Poppins', sans-serif;
       background: linear-gradient(135deg, #fbf4b6 0%, #b4e9ff 50%, #6d5c6f 100%);
       color: #6d5c6f;
@@ -25,178 +25,200 @@
     }
     
     .header {
+      background: rgba(109, 92, 111, 0.95);
+      color: #fbf4b6;
+      padding: 24px;
       text-align: center;
-      margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 4px 15px rgba(109, 92, 111, 0.1);
+      box-shadow: 0 4px 20px rgba(109, 92, 111, 0.3);
+      backdrop-filter: blur(10px);
     }
     
     .header h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 600;
-      color: #6d5c6f;
-      font-family: 'Poppins', sans-serif;
-      letter-spacing: -0.5px;
+      color: #fbf4b6;
+      font-family: 'Dancing Script', cursive;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
     }
     
     .header .subtitle {
-      margin: 8px 0 0 0;
-      font-size: 14px;
-      color: #6d5c6f;
-      opacity: 0.8;
-      font-family: 'Dancing Script', cursive;
-      font-weight: 500;
-      font-size: 16px;
+      margin: 0;
+      font-size: 12px;
+      color: #fbf4b6;
+      opacity: 0.9;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .content {
+      padding: 20px;
     }
     
     .controls {
       display: grid;
       grid-template-columns: 2fr 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 18px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
     
     .control-btn {
-      padding: 12px 16px;
+      padding: 14px 16px;
       border: none;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 500;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      color: white;
+      color: #fbf4b6;
       outline: none;
       font-family: 'Poppins', sans-serif;
-      letter-spacing: 0.2px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(109, 92, 111, 0.2);
     }
     
     .start-btn {
-      background: linear-gradient(135deg, #4CAF50, #45a049);
+      background: linear-gradient(135deg, #6d5c6f, #8a7a8c);
     }
     
     .start-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      box-shadow: 0 4px 16px rgba(109, 92, 111, 0.4);
     }
     
     .stop-btn {
-      background: linear-gradient(135deg, #f44336, #d32f2f);
+      background: linear-gradient(135deg, #6d5c6f, #5a4a5d);
     }
     
     .stop-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+      box-shadow: 0 4px 16px rgba(109, 92, 111, 0.4);
     }
     
     .clear-btn {
-      background: linear-gradient(135deg, #6d5c6f, #5a4a5d);
+      background: rgba(180, 233, 255, 0.8);
+      color: #6d5c6f;
+      border: 1px solid rgba(109, 92, 111, 0.3);
     }
     
     .clear-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(109, 92, 111, 0.3);
+      background: rgba(180, 233, 255, 0.9);
+      box-shadow: 0 4px 16px rgba(180, 233, 255, 0.3);
     }
     
     .export-btn {
-      background: linear-gradient(135deg, #2196F3, #1976D2);
+      background: rgba(180, 233, 255, 0.8);
+      color: #6d5c6f;
+      border: 1px solid rgba(109, 92, 111, 0.3);
     }
     
     .export-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+      background: rgba(180, 233, 255, 0.9);
+      box-shadow: 0 4px 16px rgba(180, 233, 255, 0.3);
     }
     
     .filter-info {
-      background: rgba(251, 244, 182, 0.9);
-      border: 1px solid #fbf4b6;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 15px;
-      font-size: 12px;
+      background: rgba(251, 244, 182, 0.3);
+      border: 2px solid rgba(109, 92, 111, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 11px;
       text-align: center;
       color: #6d5c6f;
       font-weight: 500;
-      box-shadow: 0 2px 8px rgba(251, 244, 182, 0.3);
+      backdrop-filter: blur(5px);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     
     .stats {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(180, 233, 255, 0.2);
+      border: 2px solid rgba(109, 92, 111, 0.1);
       border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 15px;
-      font-size: 12px;
-      box-shadow: 0 4px 15px rgba(109, 92, 111, 0.08);
+      gap: 20px;
+      backdrop-filter: blur(10px);
     }
     
     .stats-item {
       text-align: center;
+      padding: 12px;
+      background: rgba(251, 244, 182, 0.3);
+      border-radius: 8px;
+      border: 1px solid rgba(109, 92, 111, 0.2);
     }
     
     .stats-number {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 700;
       display: block;
       color: #6d5c6f;
       font-family: 'Poppins', sans-serif;
+      margin-bottom: 4px;
     }
     
     .stats-label {
-      font-size: 11px;
+      font-size: 10px;
       color: #6d5c6f;
-      opacity: 0.7;
+      opacity: 0.8;
       font-weight: 500;
-      margin-top: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
     
     .url-list-container {
       flex: 1;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 15px;
-      padding: 15px;
+      background: rgba(251, 244, 182, 0.2);
+      border: 2px solid rgba(109, 92, 111, 0.1);
+      border-radius: 12px;
+      padding: 20px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 400px;
-      box-shadow: 0 6px 20px rgba(109, 92, 111, 0.1);
+      height: 300px;
+      backdrop-filter: blur(10px);
     }
     
     .url-list-header {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #fbf4b6;
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid rgba(109, 92, 111, 0.1);
       display: flex;
       justify-content: space-between;
       align-items: center;
       color: #6d5c6f;
+      font-family: 'Dancing Script', cursive;
     }
     
     .quality-badge {
-      background: linear-gradient(135deg, #4CAF50, #45a049);
-      color: white;
-      padding: 4px 10px;
-      border-radius: 15px;
+      background: rgba(109, 92, 111, 0.1);
+      color: #6d5c6f;
+      padding: 4px 12px;
+      border-radius: 12px;
       font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      font-family: 'Poppins', sans-serif;
     }
     
     .url-list {
       flex: 1;
       overflow-y: auto;
       scrollbar-width: thin;
-      scrollbar-color: #b4e9ff transparent;
+      scrollbar-color: rgba(109, 92, 111, 0.3) transparent;
     }
     
     .url-list::-webkit-scrollbar {
@@ -204,28 +226,32 @@
     }
     
     .url-list::-webkit-scrollbar-track {
-      background: #fbf4b6;
+      background: rgba(109, 92, 111, 0.1);
       border-radius: 3px;
     }
     
     .url-list::-webkit-scrollbar-thumb {
-      background: #b4e9ff;
+      background: rgba(109, 92, 111, 0.3);
       border-radius: 3px;
     }
     
+    .url-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(109, 92, 111, 0.5);
+    }
+    
     .url-item {
-      background: rgba(251, 244, 182, 0.3);
-      border-radius: 10px;
-      padding: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+      padding: 16px;
       margin-bottom: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
-      border-left: 4px solid #4CAF50;
-      backdrop-filter: blur(5px);
+      border-left: 4px solid rgba(109, 92, 111, 0.8);
+      border: 1px solid rgba(109, 92, 111, 0.2);
     }
     
     .url-item:hover {
-      background: rgba(180, 233, 255, 0.4);
+      background: rgba(180, 233, 255, 0.3);
       transform: translateX(4px);
       box-shadow: 0 4px 15px rgba(109, 92, 111, 0.15);
     }
@@ -234,19 +260,11 @@
       transform: scale(0.98) translateX(4px);
     }
     
-    .url-item.stream {
-      border-left-color: #4CAF50;
-    }
-    
-    .url-item.range {
-      border-left-color: #FF9800;
-    }
-    
     .url-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     
     .url-domain {
@@ -258,7 +276,7 @@
     .url-time {
       font-size: 10px;
       color: #6d5c6f;
-      opacity: 0.6;
+      opacity: 0.7;
       font-weight: 400;
     }
     
@@ -269,11 +287,12 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-family: 'Courier New', monospace;
+      font-family: 'Poppins', sans-serif;
       background: rgba(255, 255, 255, 0.5);
-      padding: 4px 6px;
+      padding: 6px 8px;
       border-radius: 4px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(109, 92, 111, 0.1);
     }
     
     .url-badges {
@@ -284,42 +303,45 @@
     
     .url-param {
       font-size: 9px;
-      background: rgba(76, 175, 80, 0.2);
-      color: #4CAF50;
-      padding: 3px 8px;
+      background: rgba(109, 92, 111, 0.1);
+      color: #6d5c6f;
+      padding: 4px 8px;
       border-radius: 12px;
       display: inline-block;
       font-weight: 500;
-      border: 1px solid rgba(76, 175, 80, 0.3);
+      border: 1px solid rgba(109, 92, 111, 0.2);
+      text-transform: lowercase;
     }
     
     .url-type {
       font-size: 9px;
-      background: rgba(33, 150, 243, 0.2);
-      color: #2196F3;
-      padding: 3px 8px;
+      background: rgba(180, 233, 255, 0.3);
+      color: #6d5c6f;
+      padding: 4px 8px;
       border-radius: 12px;
       display: inline-block;
       font-weight: 500;
-      border: 1px solid rgba(33, 150, 243, 0.3);
+      border: 1px solid rgba(109, 92, 111, 0.2);
+      text-transform: uppercase;
     }
     
     .empty-state {
       text-align: center;
-      padding: 50px 20px;
+      padding: 40px 20px;
       color: #6d5c6f;
       opacity: 0.6;
     }
     
     .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 15px;
-      color: #b4e9ff;
+      font-size: 32px;
+      margin-bottom: 12px;
+      color: #6d5c6f;
+      font-family: 'Dancing Script', cursive;
     }
     
     .empty-state-title {
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 500;
       margin-bottom: 8px;
       font-family: 'Dancing Script', cursive;
     }
@@ -327,86 +349,98 @@
     .empty-state-subtitle {
       font-size: 11px;
       line-height: 1.4;
+      font-family: 'Poppins', sans-serif;
     }
     
     .footer {
       text-align: center;
-      margin-top: 12px;
-      font-size: 11px;
+      padding: 16px 20px;
+      font-size: 10px;
       color: #6d5c6f;
       opacity: 0.7;
       font-weight: 400;
+      border-top: 1px solid rgba(109, 92, 111, 0.1);
+      background: rgba(251, 244, 182, 0.2);
     }
     
     .status-indicator {
       display: inline-block;
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      margin-right: 8px;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
     }
     
     .status-active {
-      background: linear-gradient(135deg, #4CAF50, #45a049);
-      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      background: linear-gradient(135deg, #6d5c6f, #8a7a8c);
+      box-shadow: 0 0 10px rgba(109, 92, 111, 0.5);
     }
     
     .status-inactive {
-      background: #f44336;
-      box-shadow: 0 0 5px rgba(244, 67, 54, 0.3);
+      background: rgba(109, 92, 111, 0.3);
+      box-shadow: 0 0 5px rgba(109, 92, 111, 0.2);
     }
     
     .formal-divider {
       height: 1px;
-      background: linear-gradient(90deg, transparent, #b4e9ff, transparent);
-      margin: 15px 0;
+      background: linear-gradient(90deg, transparent, rgba(109, 92, 111, 0.3), transparent);
+      margin: 0;
     }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>Smart URL Monitor</h1>
-    <div class="subtitle">Professional network request analyzer</div>
+    <div class="subtitle">Professional Network Analytics</div>
   </div>
   
-  <div class="controls">
-    <button class="control-btn start-btn" id="toggleBtn">Start Monitoring</button>
-    <button class="control-btn clear-btn" id="clearBtn">Clear</button>
-    <button class="control-btn export-btn" id="exportBtn">Export</button>
-  </div>
-  
-  <div class="filter-info">
-    Intelligent filtering system prevents unwanted file downloads
-  </div>
-  
-  <div class="stats">
-    <div class="stats-item">
-      <span class="stats-number" id="totalCount">0</span>
-      <div class="stats-label">Quality URLs</div>
+  <div class="content">
+    <div class="controls">
+      <button class="control-btn start-btn" id="toggleBtn">Start Monitoring</button>
+      <button class="control-btn clear-btn" id="clearBtn">Clear</button>
+      <button class="control-btn export-btn" id="exportBtn">Export</button>
     </div>
-    <div class="stats-item">
-      <span class="stats-number" id="filteredCount">0</span>
-      <div class="stats-label">Filtered Out</div>
+    
+    <div class="filter-info">
+      Intelligent filtering system prevents unwanted file downloads
     </div>
-    <div class="stats-item">
-      <span class="stats-number" id="statusText">
-        <span class="status-indicator status-inactive" id="statusDot"></span>
-        Offline
-      </span>
-      <div class="stats-label">System Status</div>
+    
+    <div class="stats">
+      <div class="stats-item">
+        <span class="stats-number" id="totalCount">0</span>
+        <div class="stats-label">Quality URLs</div>
+      </div>
+      <div class="stats-item">
+        <span class="stats-number" id="filteredCount">0</span>
+        <div class="stats-label">Filtered Out</div>
+      </div>
+      <div class="stats-item">
+        <span class="stats-number" id="statusText">
+          <span class="status-indicator status-inactive" id="statusDot"></span>
+          Offline
+        </span>
+        <div class="stats-label">System Status</div>
+      </div>
     </div>
-  </div>
-  
-  <div class="url-list-container">
-    <div class="url-list-header">
-      <span>Detected Network Requests</span>
-      <span class="quality-badge">Filtered</span>
-    </div>
-    <div class="url-list" id="urlList">
-      <div class="empty-state" id="emptyState">
-        <div class="empty-state-icon">◇</div>
-        <div class="empty-state-title">No requests detected</div>
-        <div class="empty-state-subtitle">Start monitoring to begin capturing network requests with filtering parameters</div>
+    
+    <div class="url-list-container">
+      <div class="url-list-header">
+        <span>Network Requests</span>
+        <span class="quality-badge">Filtered</span>
+      </div>
+      <div class="url-list" id="urlList">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-state-icon">Monitor</div>
+          <div class="empty-state-title">No requests detected</div>
+          <div class="empty-state-subtitle">Start monitoring to begin capturing network requests with filtering parameters</div>
+        </div>
       </div>
     </div>
   </div>
