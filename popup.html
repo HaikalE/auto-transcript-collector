@@ -85,8 +85,9 @@
       border-radius: 8px;
       padding: 10px;
       margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
       font-size: 11px;
     }
     
@@ -100,6 +101,21 @@
       display: block;
     }
     
+    .stats-label {
+      font-size: 9px;
+      opacity: 0.8;
+    }
+    
+    .filter-info {
+      background: rgba(255, 193, 7, 0.2);
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 10px;
+      font-size: 10px;
+      text-align: center;
+      border-left: 3px solid #FFC107;
+    }
+    
     .url-list-container {
       flex: 1;
       background: rgba(255,255,255,0.1);
@@ -108,7 +124,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 400px;
+      height: 380px;
     }
     
     .url-list-header {
@@ -117,6 +133,18 @@
       margin-bottom: 10px;
       padding-bottom: 5px;
       border-bottom: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .quality-badge {
+      background: #4CAF50;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: bold;
     }
     
     .url-list {
@@ -159,6 +187,14 @@
       transform: scale(0.98);
     }
     
+    .url-item.stream {
+      border-left-color: #4CAF50;
+    }
+    
+    .url-item.range {
+      border-left-color: #FF9800;
+    }
+    
     .url-header {
       display: flex;
       justify-content: space-between;
@@ -186,12 +222,25 @@
       font-family: monospace;
     }
     
+    .url-badges {
+      margin-top: 4px;
+      display: flex;
+      gap: 4px;
+    }
+    
     .url-param {
-      font-size: 10px;
+      font-size: 9px;
       background: rgba(76, 175, 80, 0.3);
       padding: 2px 6px;
       border-radius: 3px;
-      margin-top: 3px;
+      display: inline-block;
+    }
+    
+    .url-type {
+      font-size: 9px;
+      background: rgba(33, 150, 243, 0.3);
+      padding: 2px 6px;
+      border-radius: 3px;
       display: inline-block;
     }
     
@@ -233,8 +282,8 @@
 </head>
 <body>
   <div class="header">
-    <h1>🔍 URL Monitor (?o= detector)</h1>
-    <p>Automated DevTools Network Inspector</p>
+    <h1>🛡️ Smart URL Monitor</h1>
+    <p>Filters out unwanted downloads automatically</p>
   </div>
   
   <div class="controls">
@@ -243,32 +292,38 @@
     <button class="control-btn export-btn" id="exportBtn">📄 Export</button>
   </div>
   
+  <div class="filter-info">
+    🛡️ Smart filtering prevents auto-downloads of range/chunk URLs
+  </div>
+  
   <div class="stats">
     <div class="stats-item">
       <span class="stats-number" id="totalCount">0</span>
-      <span>Total URLs</span>
+      <span class="stats-label">Good URLs</span>
     </div>
     <div class="stats-item">
-      <span class="stats-number" id="detectedCount">0</span>
-      <span>Detected</span>
+      <span class="stats-number" id="filteredCount">0</span>
+      <span class="stats-label">Filtered</span>
     </div>
     <div class="stats-item">
       <span class="stats-number" id="statusText">
         <span class="status-indicator status-inactive" id="statusDot"></span>
-        STOPPED
+        OFF
       </span>
+      <span class="stats-label">Status</span>
     </div>
   </div>
   
   <div class="url-list-container">
     <div class="url-list-header">
-      🌐 Detected URLs with ?o= parameter
+      <span>🌐 Quality URLs (clickable)</span>
+      <span class="quality-badge">FILTERED</span>
     </div>
     <div class="url-list" id="urlList">
       <div class="empty-state" id="emptyState">
-        <div class="empty-state-icon">🔍</div>
-        <div>No URLs detected yet</div>
-        <div style="font-size: 9px; margin-top: 5px;">Click START to begin monitoring</div>
+        <div class="empty-state-icon">🛡️</div>
+        <div>No quality URLs detected yet</div>
+        <div style="font-size: 9px; margin-top: 5px;">Smart filtering active - unwanted downloads prevented</div>
       </div>
     </div>
   </div>
