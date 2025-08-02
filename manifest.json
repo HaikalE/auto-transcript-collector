@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Auto Transcript Collector",
-  "version": "2.1",
-  "description": "STABLE: Simple START/STOP untuk deteksi URL transkrip (?o=). Resource-efficient & crash-free!",
+  "version": "2.2",
+  "description": "MAJOR FIX: Non-blocking architecture using onCompleted. No more browser freeze!",
   "permissions": [
     "webRequest",
     "downloads",
@@ -19,6 +19,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Auto Transcript Collector - Stable"
+    "default_title": "Auto Transcript Collector v2.2 - Non-blocking"
   }
 }
