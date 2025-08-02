@@ -1,114 +1,154 @@
 // Chrome Extension: Auto Transcript Collector
-// v2.2 - PROPER FIX: Non-blocking architecture using onCompleted
+// v2.3 - LIGHTWEIGHT: Only extract filename from URL (no file download!)
 
 // Global state
 let isMonitoring = false;
 let currentMode = 'clipboard';
 let stats = { detected: 0, processed: 0 };
 
-// Initialize extension with proper async pattern
+// Initialize extension
 async function initialize() {
   console.log('🚀 Extension initializing...');
   
   try {
-    // Use Promise-based loading for cleaner code
     const settings = await chrome.storage.sync.get(['mode']);
     const localData = await chrome.storage.local.get(['stats']);
 
     currentMode = settings.mode || 'clipboard';
     stats = localData.stats || { detected: 0, processed: 0 };
     
-    isMonitoring = false; // Always start in OFF state
+    isMonitoring = false;
     
     console.log('📋 Mode loaded:', currentMode);
     console.log('📊 Stats loaded:', stats);
-    console.log('✅ Extension initialized - Monitoring OFF');
+    console.log('✅ Extension initialized - FILENAME ONLY MODE');
   } catch (error) {
     console.error('❌ Initialization error:', error);
-    // Set fallback values
     currentMode = 'clipboard';
     stats = { detected: 0, processed: 0 };
   }
 }
 
-// NON-BLOCKING listener for completed requests - THE KEY FIX!
+/**
+ * Extract filename from URL string - SUPER LIGHTWEIGHT!
+ * Example: 'http://example.com/path/transcript.txt?o=123' -> 'transcript.txt'
+ * @param {string} urlString Full URL
+ * @returns {string} Filename or empty string if not found
+ */
+function getFilenameFromUrl(urlString) {
+  try {
+    const url = new URL(urlString);
+    const pathname = url.pathname; // -> '/path/to/file.txt'
+    const parts = pathname.split('/'); // -> ['', 'path', 'to', 'file.txt']
+    const filename = parts.pop() || ''; // -> 'file.txt'
+    
+    // If no extension found, try to extract from query params
+    if (!filename || !filename.includes('.')) {
+      const urlParams = new URLSearchParams(url.search);
+      // Check if there's a filename in query params
+      for (const [key, value] of urlParams) {
+        if (value.includes('.') && (value.includes('.txt') || value.includes('.json') || value.includes('.xml'))) {
+          return value;
+        }
+      }
+      // Fallback: generate filename from URL
+      return `transcript-${Date.now()}.txt`;
+    }
+    
+    return filename;
+  } catch (error) {
+    console.error('Invalid URL:', urlString);
+    return `transcript-${Date.now()}.txt`;
+  }
+}
+
+// NON-BLOCKING listener for completed requests
 const requestListener = (details) => {
-  // Only detect and update stats here - NO BLOCKING OPERATIONS!
-  console.log('🎯 URL transkrip terdeteksi (onCompleted):', details.url);
+  console.log('🎯 URL detected:', details.url);
   
   stats.detected++;
   stats.lastActivity = Date.now();
   saveStats();
   updatePopupStats('detected');
 
-  // Process content ASYNCHRONOUSLY without blocking anything
-  processContent(details.url);
+  // Process ONLY filename - NO FILE DOWNLOAD!
+  processFilename(details.url);
 };
 
-// Separate async function for heavy work (fetch, copy, download)
-async function processContent(url) {
+// LIGHTWEIGHT function - only extracts filename from URL!
+async function processFilename(url) {
   try {
-    console.log('⚙️ Processing content from:', url);
+    console.log('📝 Extracting filename from URL (no download)...');
     
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const content = await response.text();
+    // 1. Get ONLY the filename - SUPER FAST operation!
+    const filename = getFilenameFromUrl(url);
 
+    if (!filename) {
+      console.log('❌ Could not extract filename from URL:', url);
+      return;
+    }
+
+    console.log('📄 Filename detected:', filename);
+
+    // 2. Copy filename to clipboard OR save as list
     if (currentMode === 'clipboard') {
-      await copyContentToClipboard(content);
+      await copyFilenameToClipboard(filename);
     } else {
-      await downloadContentAsFile(url);
+      await saveFilenameToList(filename, url);
     }
 
-    // Update stats after successful processing
+    // 3. Update stats
     stats.processed++;
     saveStats();
     updatePopupStats('processed');
     
-    console.log('✅ Content processed successfully');
+    console.log('✅ Filename processed successfully!');
 
   } catch (error) {
-    console.error(`❌ Failed to process content from ${url}:`, error);
+    console.error(`❌ Failed to process filename from ${url}:`, error);
   }
 }
 
-// Copy content to clipboard
-async function copyContentToClipboard(text) {
+// Copy filename to clipboard
+async function copyFilenameToClipboard(filename) {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (tab) {
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: (contentToCopy) => navigator.clipboard.writeText(contentToCopy),
-        args: [text]
+        func: (textToCopy) => navigator.clipboard.writeText(textToCopy),
+        args: [filename]
       });
-      console.log('✅ Content copied to clipboard!');
+      console.log('✅ Filename copied to clipboard:', filename);
     } else {
       throw new Error('No active tab found');
     }
   } catch (error) {
-    console.error('❌ Failed to copy to clipboard:', error);
+    console.error('❌ Failed to copy filename to clipboard:', error);
   }
 }
 
-// Download content as file
-async function downloadContentAsFile(url) {
+// Save filename to downloadable list
+async function saveFilenameToList(filename, originalUrl) {
   try {
-    const timestamp = new Date().getTime();
-    const filename = `transkrip-${timestamp}.txt`;
+    const timestamp = new Date().toISOString();
+    const listContent = `${timestamp} - ${filename} - ${originalUrl}\n`;
+    
+    // Create blob and download as text file
+    const blob = new Blob([listContent], { type: 'text/plain' });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    const downloadFilename = `filename-list-${Date.now()}.txt`;
     
     chrome.downloads.download({
-      url: url,
-      filename: filename
+      url: blobUrl,
+      filename: downloadFilename
     });
     
-    console.log('✅ Download started:', filename);
+    console.log('✅ Filename saved to list:', downloadFilename);
   } catch (error) {
-    console.error('❌ Failed to start download:', error);
+    console.error('❌ Failed to save filename to list:', error);
   }
 }
 
@@ -117,36 +157,34 @@ function saveStats() {
   chrome.storage.local.set({ stats: stats });
 }
 
-// Update popup with minimal error handling
+// Update popup stats
 function updatePopupStats(type) {
   chrome.runtime.sendMessage({
     action: 'statsUpdate',
     stats: stats,
     type: type
   }).catch(error => {
-    // Only log if it's not the common "popup not open" error
     if (!error.message.includes("Could not establish connection")) {
       console.warn("Message sending error:", error);
     }
   });
 }
 
-// START monitoring - Use onCompleted instead of onBeforeRequest!
+// START monitoring
 function startMonitoring() {
   if (isMonitoring) return false;
 
-  // THE KEY FIX: Use onCompleted which is NON-BLOCKING!
   chrome.webRequest.onCompleted.addListener(
     requestListener,
     { urls: ["*://*/*?o=*"] }
   );
   
   isMonitoring = true;
-  console.log('✅ Monitoring STARTED (non-blocking)');
+  console.log('✅ Monitoring STARTED (filename extraction only)');
   return true;
 }
 
-// STOP monitoring
+// STOP monitoring  
 function stopMonitoring() {
   if (!isMonitoring) return false;
   
@@ -203,5 +241,5 @@ chrome.runtime.onStartup.addListener(initialize);
 chrome.runtime.onInstalled.addListener(initialize);
 initialize();
 
-console.log('🎯 Auto Transcript Collector v2.2 - NON-BLOCKING ARCHITECTURE');
-console.log('💡 Using onCompleted instead of onBeforeRequest for stability');
+console.log('🎯 Auto Transcript Collector v2.3 - FILENAME EXTRACTION ONLY');
+console.log('💡 No file downloads - just filename parsing for maximum speed!');
