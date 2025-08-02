@@ -1,30 +1,91 @@
-// Chrome Extension: URL Monitor for ?o= parameters
-// v3.0 - URL Collector & Display with clickable links
+// Chrome Extension: Smart URL Monitor for ?o= parameters
+// v3.1 - Smart filtering to avoid unwanted downloads
 
 // Global state
 let isMonitoring = false;
 let collectedUrls = [];
-let stats = { detected: 0, total: 0 };
+let stats = { detected: 0, filtered: 0, total: 0 };
 
 // Initialize extension
 async function initialize() {
-  console.log('🚀 URL Monitor initializing...');
+  console.log('🚀 Smart URL Monitor initializing...');
   
   try {
     const localData = await chrome.storage.local.get(['collectedUrls', 'stats']);
     
     collectedUrls = localData.collectedUrls || [];
-    stats = localData.stats || { detected: 0, total: 0 };
+    stats = localData.stats || { detected: 0, filtered: 0, total: 0 };
     
     isMonitoring = false;
     
     console.log('📊 URLs loaded:', collectedUrls.length);
     console.log('📈 Stats loaded:', stats);
-    console.log('✅ URL Monitor initialized');
+    console.log('✅ Smart URL Monitor initialized');
   } catch (error) {
     console.error('❌ Initialization error:', error);
     collectedUrls = [];
-    stats = { detected: 0, total: 0 };
+    stats = { detected: 0, filtered: 0, total: 0 };
+  }
+}
+
+// Smart URL filtering to avoid unwanted downloads
+function shouldFilterUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname.toLowerCase();
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    // Filter out range requests (these auto-download files)
+    if (pathname.includes('/range/')) {
+      console.log('🚫 Filtered range request:', url);
+      return true;
+    }
+    
+    // Filter out chunk requests
+    if (pathname.match(/\/\d+-\d+/)) {
+      console.log('🚫 Filtered chunk request:', url);
+      return true;
+    }
+    
+    // Filter out segment requests
+    if (pathname.includes('/segment/') || pathname.includes('/chunk/')) {
+      console.log('🚫 Filtered segment request:', url);
+      return true;
+    }
+    
+    // Filter out manifest/playlist files that might auto-download
+    if (pathname.includes('.m3u8') || pathname.includes('.mpd') || 
+        pathname.includes('.manifest') || pathname.includes('/manifest/')) {
+      console.log('🚫 Filtered manifest/playlist:', url);
+      return true;
+    }
+    
+    // Filter out direct media files that auto-download
+    const mediaExtensions = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', 
+                           '.mp3', '.wav', '.aac', '.ogg', '.m4a',
+                           '.ts', '.m4s', '.webm'];
+    
+    if (mediaExtensions.some(ext => pathname.includes(ext))) {
+      console.log('🚫 Filtered media file:', url);
+      return true;
+    }
+    
+    // Filter out very long numeric paths (usually auto-download chunks)
+    const pathParts = pathname.split('/');
+    for (const part of pathParts) {
+      if (part.match(/^\d{6,}(-\d{6,})?$/)) {
+        console.log('🚫 Filtered numeric chunk path:', url);
+        return true;
+      }
+    }
+    
+    // Allow main streaming URLs (these are usually viewable)
+    console.log('✅ URL passed filter:', url);
+    return false;
+    
+  } catch (error) {
+    console.error('Error filtering URL:', error);
+    return false; // If error, don't filter (be permissive)
   }
 }
 
@@ -34,11 +95,18 @@ function createUrlEntry(url, timestamp = Date.now()) {
     const urlObj = new URL(url);
     const oParam = urlObj.searchParams.get('o');
     
+    // Determine URL type
+    let urlType = 'stream';
+    if (urlObj.pathname.includes('/range/')) urlType = 'range';
+    else if (urlObj.pathname.includes('/segment/')) urlType = 'segment';
+    else if (urlObj.pathname.includes('/chunk/')) urlType = 'chunk';
+    
     return {
       id: timestamp,
       url: url,
       domain: urlObj.hostname,
       oParam: oParam,
+      urlType: urlType,
       timestamp: timestamp,
       timeString: new Date(timestamp).toLocaleTimeString()
     };
@@ -48,10 +116,19 @@ function createUrlEntry(url, timestamp = Date.now()) {
   }
 }
 
-// NON-BLOCKING listener for completed requests
+// SMART listener for completed requests with filtering
 const requestListener = (details) => {
   try {
-    console.log('🎯 URL with ?o= detected:', details.url);
+    console.log('🔍 Checking URL with ?o=:', details.url);
+    
+    // Smart filtering to avoid unwanted downloads
+    if (shouldFilterUrl(details.url)) {
+      stats.filtered++;
+      console.log('🚫 URL filtered (would cause unwanted download)');
+      return;
+    }
+    
+    console.log('✅ URL approved for collection:', details.url);
     
     // Create URL entry
     const urlEntry = createUrlEntry(details.url);
@@ -64,12 +141,12 @@ const requestListener = (details) => {
       return;
     }
     
-    // Add to collection
-    collectedUrls.unshift(urlEntry); // Add to beginning for newest first
+    // Add to collection (newest first)
+    collectedUrls.unshift(urlEntry);
     
-    // Limit collection size (keep last 100 URLs)
-    if (collectedUrls.length > 100) {
-      collectedUrls = collectedUrls.slice(0, 100);
+    // Limit collection size (keep last 50 URLs)
+    if (collectedUrls.length > 50) {
+      collectedUrls = collectedUrls.slice(0, 50);
     }
     
     // Update stats
@@ -81,6 +158,8 @@ const requestListener = (details) => {
     
     // Send to popup
     updatePopup('urlDetected', urlEntry);
+    
+    console.log('🎯 Good URL added to collection');
     
   } catch (error) {
     console.error('❌ Error in request listener:', error);
@@ -123,7 +202,7 @@ function startMonitoring() {
   );
   
   isMonitoring = true;
-  console.log('✅ URL monitoring STARTED');
+  console.log('✅ Smart URL monitoring STARTED (with filtering)');
   return true;
 }
 
@@ -140,22 +219,24 @@ function stopMonitoring() {
 // Clear collected URLs
 function clearUrls() {
   collectedUrls = [];
-  stats = { detected: 0, total: 0 };
+  stats = { detected: 0, filtered: 0, total: 0 };
   saveData();
   console.log('🗑️ URLs cleared');
 }
 
-// Export URLs as text
+// Export URLs as text with filtering info
 function exportUrls() {
   try {
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    const filename = `urls-with-o-param-${timestamp}.txt`;
+    const filename = `smart-urls-with-o-param-${timestamp}.txt`;
     
-    let content = `URLs with ?o= parameter - Exported: ${new Date().toLocaleString()}\n`;
-    content += `Total URLs: ${collectedUrls.length}\n\n`;
+    let content = `Smart URL Monitor Export - ${new Date().toLocaleString()}\n`;
+    content += `Total Good URLs: ${collectedUrls.length}\n`;
+    content += `URLs Filtered (avoided downloads): ${stats.filtered}\n`;
+    content += `Note: Range/chunk URLs filtered to prevent unwanted downloads\n\n`;
     
     collectedUrls.forEach((item, index) => {
-      content += `${index + 1}. [${item.timeString}] ${item.domain}\n`;
+      content += `${index + 1}. [${item.timeString}] ${item.domain} (${item.urlType})\n`;
       content += `   ${item.url}\n\n`;
     });
     
@@ -167,7 +248,7 @@ function exportUrls() {
       filename: filename
     });
     
-    console.log('✅ URLs exported:', filename);
+    console.log('✅ Smart URLs exported:', filename);
     return true;
   } catch (error) {
     console.error('❌ Export failed:', error);
@@ -242,5 +323,5 @@ chrome.runtime.onStartup.addListener(initialize);
 chrome.runtime.onInstalled.addListener(initialize);
 initialize();
 
-console.log('🎯 URL Monitor v3.0 - Network Request Collector for ?o= parameters');
-console.log('💡 Automated DevTools Network inspector for specific URLs');
+console.log('🎯 Smart URL Monitor v3.1 - Intelligent filtering to avoid unwanted downloads');
+console.log('🛡️ Filters out range/chunk requests that cause auto-downloads');
