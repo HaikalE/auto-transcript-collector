@@ -1,204 +1,157 @@
-# Auto Transcript Collector
+# Auto Transcript Collector v2.0
 
-Chrome extension untuk mendeteksi dan mengambil konten transkrip secara otomatis dari URL dengan parameter `?o=`. **SEKARANG DENGAN POPUP UI YANG BISA DIKLIK!** 🎉
+🚀 **LIGHTWEIGHT & RESOURCE-EFFICIENT** Chrome extension untuk deteksi URL transkrip dengan parameter `?o=`. 
 
-## 📋 Fitur
+## ⚡ **SIMPLE START/STOP INTERFACE** - No More Resource Waste!
 
-- **Deteksi Otomatis**: Mendeteksi URL transkrip yang mengandung parameter `?o=`
-- **Popup Interface**: UI yang mudah digunakan dan bisa diklik
-- **Dua Mode Operasi**:
-  - 📋 **Copy ke Clipboard**: Menyalin konten transkrip ke clipboard
-  - 💾 **Download File**: Mengunduh konten sebagai file `.txt` dengan timestamp
-- **Manual Control**: Input URL manual untuk processing konten
-- **Real-time Statistics**: Monitor aktivitas extension
-- **Settings Persistence**: Mode tersimpan otomatis
+Extension ini sekarang **HANYA menggunakan resource saat diperlukan**! Default state = OFF untuk maksimal efisiensi.
 
-## 🎮 Interface Popup
+## 🎯 Key Features
 
-Klik icon extension di toolbar untuk membuka popup interface dengan fitur:
+- **🔥 RESOURCE-EFFICIENT**: Default OFF - zero background resource usage
+- **▶️ START/STOP Control**: Simple toggle button 
+- **📋 Two Modes**: Clipboard copy atau Download file
+- **🎯 Smart Detection**: Hanya URL dengan parameter `?o=`
+- **📊 Simple Stats**: Basic monitoring tanpa bloat
 
-### 🎯 Status Monitor
-- Status extension (Aktif/Tidak aktif)
-- Mode operasi saat ini
-- Real-time statistics (URL terdeteksi, berhasil diproses, aktivitas terakhir)
+## 🚀 Cara Install
 
-### ⚙️ Mode Control
-- **📋 Clipboard Mode**: Salin konten ke clipboard
-- **💾 Download Mode**: Unduh konten sebagai file
-
-### 🔧 Manual Control
-- Input URL manual dengan parameter `?o=`
-- Tombol Copy dan Download untuk processing manual
-- Auto-detection URL aktif di tab saat ini
-
-## 🚀 Cara Instalasi
-
-1. **Download Source Code**:
-   ```bash
-   git clone https://github.com/HaikalE/auto-transcript-collector.git
-   cd auto-transcript-collector
-   ```
-
-2. **Install di Chrome**:
-   - Buka Chrome browser
-   - Ketik `chrome://extensions/` di address bar
-   - Aktifkan "Developer mode" (toggle di kanan atas)
-   - Klik "Load unpacked"
-   - Pilih folder project ini
-
-3. **Verifikasi Instalasi**:
-   - Extension "Auto Transcript Collector" akan muncul di daftar extensions
-   - **Icon extension akan muncul di toolbar** - SEKARANG BISA DIKLIK! 🎯
-   - Klik icon untuk membuka popup interface
-
-## 💡 Cara Penggunaan
-
-### 🤖 Mode Otomatis
-1. **Aktivasi**: Extension bekerja otomatis setelah terinstall
-2. **Deteksi**: Saat mengunjungi website yang memuat transkrip dengan URL mengandung `?o=`, extension akan mendeteksinya
-3. **Pemrosesan**: Konten akan otomatis disalin ke clipboard atau diunduh (tergantung mode yang dipilih)
-
-### 🎮 Mode Manual
-1. **Buka Popup**: Klik icon extension di toolbar
-2. **Input URL**: Paste URL yang mengandung `?o=` di input field
-3. **Process**: Klik tombol "Copy" atau "Download"
-4. **Monitor**: Lihat statistics real-time di popup
-
-### ⚙️ Mengubah Mode
-1. Buka popup extension
-2. Klik tombol "📋 Clipboard" atau "💾 Download"
-3. Setting akan tersimpan otomatis
-
-## 🔧 Technical Details
-
-### Manifest V3
-Extension ini menggunakan Manifest V3 dengan permissions:
-- `webRequest`: Memantau network requests
-- `downloads`: Mengunduh file
-- `clipboardWrite`: Menulis ke clipboard
-- `storage`: Menyimpan settings dan statistics
-- `activeTab`: Akses tab aktif
-- `scripting`: Execute script untuk clipboard
-- `<all_urls>`: Akses semua website
-
-### Architecture
-- **background.js**: Service worker utama dengan auto-detection
-- **popup.html/js**: Interface popup untuk manual control
-- **Storage**: Settings dan statistics tersimpan di Chrome storage
-
-## 📁 File Structure
-
-```
-auto-transcript-collector/
-├── manifest.json      # Konfigurasi extension
-├── background.js      # Service worker utama  
-├── popup.html         # Popup interface
-├── popup.js           # Popup functionality
-├── README.md          # Dokumentasi
-└── LICENSE           # MIT License
+```bash
+git clone https://github.com/HaikalE/auto-transcript-collector.git
+cd auto-transcript-collector
 ```
 
-## 🎯 Screenshot Popup Interface
+1. Buka `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked"
+4. Pilih folder project
 
-Popup interface mencakup:
-- 🟢 Status indicator (Aktif/Tidak aktif)
-- 🎮 Mode switching buttons (Clipboard/Download)
-- 📝 Manual URL input field
-- 📊 Real-time statistics display
-- 🎨 Modern, gradient design
+## 💡 Cara Pakai (SUPER SIMPLE!)
+
+### 1. **Klik Icon Extension** di toolbar
+### 2. **Tekan START** untuk mulai monitoring  
+### 3. **Pilih Mode**: Clipboard atau Download
+### 4. **Browse normal** - extension akan deteksi URL `?o=` otomatis
+### 5. **Tekan STOP** saat selesai untuk save resource
+
+## ⚙️ Interface Popup
+
+```
+🎤 Auto Transcript Collector
+     Simple & Lightweight
+
+┌─────────────────────────┐
+│        🚀 (Active)      │ ← Status indicator  
+│       MONITORING        │
+│  Scanning for URLs...   │
+└─────────────────────────┘
+
+     ⏹️ STOP MONITORING     ← Main toggle button
+
+📋 Action Mode
+┌─────────────┬─────────────┐
+│ Clipboard ✓ │  Download   │ ← Mode selector
+└─────────────┴─────────────┘
+
+Detected: 5    Processed: 4
+Status: Active
+```
+
+## 🔥 Resource Management
+
+| State | Resource Usage | webRequest Listener |
+|-------|----------------|-------------------|
+| **STOPPED** | **🟢 MINIMAL** | ❌ Disabled |
+| **STARTED** | 🟡 Active | ✅ Enabled |
+
+**Extension cerdas**: Hanya consume resource saat explicitly di-START!
+
+## 🛠️ Technical Improvements v2.0
+
+### ❌ **Removed** (Resource Hogs):
+- ~~Manual URL input field~~
+- ~~Always-on webRequest listener~~
+- ~~Complex statistics tracking~~
+- ~~Heavy popup features~~
+
+### ✅ **Added** (Lightweight):
+- Dynamic listener management
+- START/STOP resource control
+- Simple toggle interface
+- Minimal stats display
+
+## 📊 Performance Comparison
+
+| Version | Default State | Resource Usage | User Control |
+|---------|--------------|----------------|--------------|
+| v1.x | Always ON | 🔴 High | Limited |
+| **v2.0** | **OFF** | **🟢 Minimal** | **Full** |
 
 ## 🐛 Troubleshooting
 
-### Extension tidak mendeteksi URL
-- Pastikan URL mengandung parameter `?o=`
-- Cek console untuk log aktivitas (`F12` → Console)
-- Pastikan permissions sudah diberikan
+### Extension tidak detect URL
+- ✅ Pastikan di-START dulu
+- ✅ URL harus ada parameter `?o=`
+- ✅ Check popup status
 
-### Icon extension tidak muncul
-- Pastikan extension enabled di `chrome://extensions/`
-- Refresh browser setelah install
-- Check apakah extension muncul di menu extensions (puzzle icon)
+### Resource usage tinggi
+- ✅ Click STOP saat tidak pakai
+- ✅ Default state = OFF
 
-### Popup tidak buka
-- Klik kanan icon → "Inspect popup" untuk debug
-- Reload extension di `chrome://extensions/`
-- Check console errors
+### Popup tidak respond
+- ✅ Reload extension
+- ✅ Check permissions
 
-### Error saat copy ke clipboard
-- Pastikan website mengizinkan clipboard access
-- Coba refresh halaman dan ulangi
-- Test dengan manual input di popup
+## 💻 File Structure (Minimalist)
 
-### Error saat download
-- Cek permission downloads di Chrome
-- Pastikan tidak ada popup blocker yang aktif
-- Check Downloads folder Chrome
+```
+auto-transcript-collector/
+├── manifest.json      # v2.0 config
+├── background.js      # Smart resource management
+├── popup.html         # Simple START/STOP UI
+├── popup.js           # Lightweight controls
+└── README.md          # This file
+```
 
-## 📊 Features Comparison
+## 🔒 Privacy & Resource Usage
 
-| Feature | V1.0 (Background Only) | V1.2 (With Popup) |
-|---------|----------------------|-------------------|
-| Auto Detection | ✅ | ✅ |
-| Manual Control | ❌ | ✅ |
-| Mode Switching | Code Edit | Popup UI |
-| Statistics | Console Only | Real-time UI |
-| Settings | Manual | Persistent |
-| User Interface | ❌ | ✅ |
+- ✅ Zero tracking
+- ✅ Local storage only  
+- ✅ No external connections
+- ✅ **Smart resource management**
+- ✅ **Default OFF state**
 
-## 📝 Development
+## 🆚 Why v2.0?
 
-### Prerequisites
-- Google Chrome browser
-- Developer mode enabled
+**v1.x Problems:**
+- Always monitoring (resource waste)
+- Complex manual features
+- High background usage
 
-### Testing
-1. Load extension dalam developer mode
-2. Klik icon extension untuk buka popup
-3. Test auto-detection dengan URL `?o=`
-4. Test manual input dengan URL samples
-5. Monitor console dan popup statistics
-
-### Debug Mode
-- Background: `chrome://extensions/` → Extension → "service worker"
-- Popup: Right-click icon → "Inspect popup"
-
-## 🔒 Privacy & Security
-
-- Extension hanya memproses URL dengan pattern spesifik (`?o=`)
-- Tidak menyimpan data personal
-- Settings tersimpan locally di Chrome storage
-- Tidak mengirim data ke server eksternal
-- Semua operasi dilakukan locally
-
-## 🆕 What's New in V1.2
-
-- ✅ **Clickable popup interface**
-- ✅ **Manual URL processing**
-- ✅ **Real-time statistics**
-- ✅ **Persistent settings**
-- ✅ **Mode switching via UI**
-- ✅ **Modern gradient design**
-- ✅ **Auto-fill current tab URL**
-- ✅ **Visual feedback & notifications**
+**v2.0 Solutions:**  
+- START/STOP control
+- Resource-efficient
+- Simple but effective
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+MIT License - Free to use and modify.
 
 ## 🤝 Contributing
 
-1. Fork repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
-
-## 📞 Support
-
-Jika mengalami masalah atau memiliki pertanyaan, silakan buat [Issue](https://github.com/HaikalE/auto-transcript-collector/issues) di repository ini.
+Issues dan PRs welcome! Focus pada **simplicity** dan **efficiency**.
 
 ---
 
-**🎉 SEKARANG EXTENSION SUDAH BISA DIKLIK!** Tidak perlu edit kode lagi untuk ganti mode - cukup klik icon extension dan gunakan popup interface yang mudah dan intuitif! 
+## 🎯 **TL;DR untuk yang Males Baca:**
 
-**Note**: Extension ini dirancang khusus untuk URL dengan parameter `?o=`. Pastikan URL target sesuai dengan pattern ini agar extension dapat berfungsi dengan baik.
+1. **Download & Install** extension
+2. **Klik icon** extension di toolbar
+3. **Tekan START** untuk mulai monitoring
+4. **Pilih mode** Clipboard/Download  
+5. **Browse normal** - otomatis detect `?o=` URLs
+6. **Tekan STOP** saat selesai
+
+**Simple. Lightweight. Effective.** 🚀
+
+**Repository**: https://github.com/HaikalE/auto-transcript-collector
