@@ -1,168 +1,111 @@
-// Chrome Extension: Auto Transcript Collector
-// v2.3 - LIGHTWEIGHT: Only extract filename from URL (no file download!)
+// Chrome Extension: URL Monitor for ?o= parameters
+// v3.0 - URL Collector & Display with clickable links
 
 // Global state
 let isMonitoring = false;
-let currentMode = 'clipboard';
-let stats = { detected: 0, processed: 0 };
+let collectedUrls = [];
+let stats = { detected: 0, total: 0 };
 
 // Initialize extension
 async function initialize() {
-  console.log('🚀 Extension initializing...');
+  console.log('🚀 URL Monitor initializing...');
   
   try {
-    const settings = await chrome.storage.sync.get(['mode']);
-    const localData = await chrome.storage.local.get(['stats']);
-
-    currentMode = settings.mode || 'clipboard';
-    stats = localData.stats || { detected: 0, processed: 0 };
+    const localData = await chrome.storage.local.get(['collectedUrls', 'stats']);
+    
+    collectedUrls = localData.collectedUrls || [];
+    stats = localData.stats || { detected: 0, total: 0 };
     
     isMonitoring = false;
     
-    console.log('📋 Mode loaded:', currentMode);
-    console.log('📊 Stats loaded:', stats);
-    console.log('✅ Extension initialized - FILENAME ONLY MODE');
+    console.log('📊 URLs loaded:', collectedUrls.length);
+    console.log('📈 Stats loaded:', stats);
+    console.log('✅ URL Monitor initialized');
   } catch (error) {
     console.error('❌ Initialization error:', error);
-    currentMode = 'clipboard';
-    stats = { detected: 0, processed: 0 };
+    collectedUrls = [];
+    stats = { detected: 0, total: 0 };
   }
 }
 
-/**
- * Extract filename from URL string - SUPER LIGHTWEIGHT!
- * Example: 'http://example.com/path/transcript.txt?o=123' -> 'transcript.txt'
- * @param {string} urlString Full URL
- * @returns {string} Filename or empty string if not found
- */
-function getFilenameFromUrl(urlString) {
+// URL structure for storage
+function createUrlEntry(url, timestamp = Date.now()) {
   try {
-    const url = new URL(urlString);
-    const pathname = url.pathname; // -> '/path/to/file.txt'
-    const parts = pathname.split('/'); // -> ['', 'path', 'to', 'file.txt']
-    const filename = parts.pop() || ''; // -> 'file.txt'
+    const urlObj = new URL(url);
+    const oParam = urlObj.searchParams.get('o');
     
-    // If no extension found, try to extract from query params
-    if (!filename || !filename.includes('.')) {
-      const urlParams = new URLSearchParams(url.search);
-      // Check if there's a filename in query params
-      for (const [key, value] of urlParams) {
-        if (value.includes('.') && (value.includes('.txt') || value.includes('.json') || value.includes('.xml'))) {
-          return value;
-        }
-      }
-      // Fallback: generate filename from URL
-      return `transcript-${Date.now()}.txt`;
-    }
-    
-    return filename;
+    return {
+      id: timestamp,
+      url: url,
+      domain: urlObj.hostname,
+      oParam: oParam,
+      timestamp: timestamp,
+      timeString: new Date(timestamp).toLocaleTimeString()
+    };
   } catch (error) {
-    console.error('Invalid URL:', urlString);
-    return `transcript-${Date.now()}.txt`;
+    console.error('Error creating URL entry:', error);
+    return null;
   }
 }
 
 // NON-BLOCKING listener for completed requests
 const requestListener = (details) => {
-  console.log('🎯 URL detected:', details.url);
-  
-  stats.detected++;
-  stats.lastActivity = Date.now();
-  saveStats();
-  updatePopupStats('detected');
-
-  // Process ONLY filename - NO FILE DOWNLOAD!
-  processFilename(details.url);
-};
-
-// LIGHTWEIGHT function - only extracts filename from URL!
-async function processFilename(url) {
   try {
-    console.log('📝 Extracting filename from URL (no download)...');
+    console.log('🎯 URL with ?o= detected:', details.url);
     
-    // 1. Get ONLY the filename - SUPER FAST operation!
-    const filename = getFilenameFromUrl(url);
-
-    if (!filename) {
-      console.log('❌ Could not extract filename from URL:', url);
+    // Create URL entry
+    const urlEntry = createUrlEntry(details.url);
+    if (!urlEntry) return;
+    
+    // Check if URL already exists (avoid duplicates)
+    const exists = collectedUrls.some(item => item.url === details.url);
+    if (exists) {
+      console.log('🔄 URL already exists, skipping...');
       return;
     }
-
-    console.log('📄 Filename detected:', filename);
-
-    // 2. Copy filename to clipboard OR save as list
-    if (currentMode === 'clipboard') {
-      await copyFilenameToClipboard(filename);
-    } else {
-      await saveFilenameToList(filename, url);
+    
+    // Add to collection
+    collectedUrls.unshift(urlEntry); // Add to beginning for newest first
+    
+    // Limit collection size (keep last 100 URLs)
+    if (collectedUrls.length > 100) {
+      collectedUrls = collectedUrls.slice(0, 100);
     }
-
-    // 3. Update stats
-    stats.processed++;
-    saveStats();
-    updatePopupStats('processed');
     
-    console.log('✅ Filename processed successfully!');
-
+    // Update stats
+    stats.detected++;
+    stats.total = collectedUrls.length;
+    
+    // Save to storage
+    saveData();
+    
+    // Send to popup
+    updatePopup('urlDetected', urlEntry);
+    
   } catch (error) {
-    console.error(`❌ Failed to process filename from ${url}:`, error);
+    console.error('❌ Error in request listener:', error);
   }
-}
+};
 
-// Copy filename to clipboard
-async function copyFilenameToClipboard(filename) {
+// Save data to storage
+function saveData() {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    if (tab) {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (textToCopy) => navigator.clipboard.writeText(textToCopy),
-        args: [filename]
-      });
-      console.log('✅ Filename copied to clipboard:', filename);
-    } else {
-      throw new Error('No active tab found');
-    }
-  } catch (error) {
-    console.error('❌ Failed to copy filename to clipboard:', error);
-  }
-}
-
-// Save filename to downloadable list
-async function saveFilenameToList(filename, originalUrl) {
-  try {
-    const timestamp = new Date().toISOString();
-    const listContent = `${timestamp} - ${filename} - ${originalUrl}\n`;
-    
-    // Create blob and download as text file
-    const blob = new Blob([listContent], { type: 'text/plain' });
-    const blobUrl = URL.createObjectURL(blob);
-    
-    const downloadFilename = `filename-list-${Date.now()}.txt`;
-    
-    chrome.downloads.download({
-      url: blobUrl,
-      filename: downloadFilename
+    chrome.storage.local.set({ 
+      collectedUrls: collectedUrls, 
+      stats: stats 
     });
-    
-    console.log('✅ Filename saved to list:', downloadFilename);
   } catch (error) {
-    console.error('❌ Failed to save filename to list:', error);
+    console.error('Error saving data:', error);
   }
 }
 
-// Save statistics
-function saveStats() {
-  chrome.storage.local.set({ stats: stats });
-}
-
-// Update popup stats
-function updatePopupStats(type) {
+// Update popup with new data
+function updatePopup(action, data = null) {
   chrome.runtime.sendMessage({
-    action: 'statsUpdate',
+    action: action,
+    data: data,
     stats: stats,
-    type: type
+    urls: collectedUrls.slice(0, 20) // Send latest 20 URLs
   }).catch(error => {
     if (!error.message.includes("Could not establish connection")) {
       console.warn("Message sending error:", error);
@@ -180,7 +123,7 @@ function startMonitoring() {
   );
   
   isMonitoring = true;
-  console.log('✅ Monitoring STARTED (filename extraction only)');
+  console.log('✅ URL monitoring STARTED');
   return true;
 }
 
@@ -190,47 +133,105 @@ function stopMonitoring() {
   
   chrome.webRequest.onCompleted.removeListener(requestListener);
   isMonitoring = false;
-  console.log('⏹️ Monitoring STOPPED');
+  console.log('⏹️ URL monitoring STOPPED');
   return true;
+}
+
+// Clear collected URLs
+function clearUrls() {
+  collectedUrls = [];
+  stats = { detected: 0, total: 0 };
+  saveData();
+  console.log('🗑️ URLs cleared');
+}
+
+// Export URLs as text
+function exportUrls() {
+  try {
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = `urls-with-o-param-${timestamp}.txt`;
+    
+    let content = `URLs with ?o= parameter - Exported: ${new Date().toLocaleString()}\n`;
+    content += `Total URLs: ${collectedUrls.length}\n\n`;
+    
+    collectedUrls.forEach((item, index) => {
+      content += `${index + 1}. [${item.timeString}] ${item.domain}\n`;
+      content += `   ${item.url}\n\n`;
+    });
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    chrome.downloads.download({
+      url: blobUrl,
+      filename: filename
+    });
+    
+    console.log('✅ URLs exported:', filename);
+    return true;
+  } catch (error) {
+    console.error('❌ Export failed:', error);
+    return false;
+  }
 }
 
 // Handle messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.action) {
-    case 'toggleMonitoring':
-      let success = false;
-      
-      if (message.isActive) {
-        success = startMonitoring();
-        if (success && message.mode) {
-          currentMode = message.mode;
-          chrome.storage.sync.set({ mode: currentMode });
+  try {
+    switch (message.action) {
+      case 'toggleMonitoring':
+        let success = false;
+        
+        if (message.isActive) {
+          success = startMonitoring();
+        } else {
+          success = stopMonitoring();
         }
-      } else {
-        success = stopMonitoring();
-      }
-      
-      sendResponse({ success: success });
-      break;
+        
+        sendResponse({ success: success });
+        break;
 
-    case 'setMode':
-      currentMode = message.mode;
-      chrome.storage.sync.set({ mode: currentMode });
-      console.log('🔄 Mode updated to:', currentMode);
-      sendResponse({ success: true });
-      break;
-
-    case 'getState':
-      sendResponse({
-        isActive: isMonitoring,
-        mode: currentMode,
-        stats: stats
-      });
-      break;
-      
-    default:
-      console.warn('Unknown action:', message.action);
-      sendResponse({ success: false, error: 'Unknown action' });
+      case 'getState':
+        sendResponse({
+          isActive: isMonitoring,
+          stats: stats,
+          urls: collectedUrls.slice(0, 20) // Latest 20 URLs
+        });
+        break;
+        
+      case 'clearUrls':
+        clearUrls();
+        sendResponse({ success: true });
+        break;
+        
+      case 'exportUrls':
+        const exportSuccess = exportUrls();
+        sendResponse({ success: exportSuccess });
+        break;
+        
+      case 'getMoreUrls':
+        const start = message.start || 0;
+        const limit = message.limit || 20;
+        const moreUrls = collectedUrls.slice(start, start + limit);
+        sendResponse({ urls: moreUrls, hasMore: start + limit < collectedUrls.length });
+        break;
+        
+      case 'openUrl':
+        if (message.url) {
+          chrome.tabs.create({ url: message.url });
+          sendResponse({ success: true });
+        } else {
+          sendResponse({ success: false, error: 'No URL provided' });
+        }
+        break;
+        
+      default:
+        console.warn('Unknown action:', message.action);
+        sendResponse({ success: false, error: 'Unknown action' });
+    }
+  } catch (error) {
+    console.error('❌ Error handling message:', error);
+    sendResponse({ success: false, error: error.message });
   }
   
   return true;
@@ -241,5 +242,5 @@ chrome.runtime.onStartup.addListener(initialize);
 chrome.runtime.onInstalled.addListener(initialize);
 initialize();
 
-console.log('🎯 Auto Transcript Collector v2.3 - FILENAME EXTRACTION ONLY');
-console.log('💡 No file downloads - just filename parsing for maximum speed!');
+console.log('🎯 URL Monitor v3.0 - Network Request Collector for ?o= parameters');
+console.log('💡 Automated DevTools Network inspector for specific URLs');
