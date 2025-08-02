@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .header p {
+      margin: 5px 0 0 0;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .status {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .active { background-color: #4CAF50; }
+    .inactive { background-color: #f44336; }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    
+    .btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-1px);
+    }
+    
+    .btn.active {
+      background: rgba(255,255,255,0.4);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .manual-controls {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .manual-controls h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+    
+    .url-input {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-small {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .btn-small:hover {
+      background: #45a049;
+    }
+    
+    .btn-small.download {
+      background: #2196F3;
+    }
+    
+    .btn-small.download:hover {
+      background: #1976D2;
+    }
+    
+    .stats {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12px;
+    }
+    
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 11px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎤 Auto Transcript Collector</h1>
+    <p>Deteksi & ambil transkrip otomatis</p>
+  </div>
+  
+  <div class="status">
+    <div class="status-indicator">
+      <div class="status-dot active" id="statusDot"></div>
+      <span id="statusText">Extension Aktif</span>
+    </div>
+    <div>Mode: <span id="currentMode">Copy ke Clipboard</span></div>
+  </div>
+  
+  <div class="controls">
+    <button class="btn active" id="clipboardBtn">📋 Clipboard</button>
+    <button class="btn" id="downloadBtn">💾 Download</button>
+  </div>
+  
+  <div class="manual-controls">
+    <h3>🔧 Manual Control</h3>
+    <input type="text" class="url-input" id="urlInput" placeholder="Paste URL dengan parameter ?o= di sini...">
+    <div class="action-buttons">
+      <button class="btn-small" id="copyManualBtn">Copy</button>
+      <button class="btn-small download" id="downloadManualBtn">Download</button>
+    </div>
+  </div>
+  
+  <div class="stats">
+    <div class="stats-row">
+      <span>URL Terdeteksi:</span>
+      <span id="detectedCount">0</span>
+    </div>
+    <div class="stats-row">
+      <span>Berhasil Diproses:</span>
+      <span id="processedCount">0</span>
+    </div>
+    <div class="stats-row">
+      <span>Terakhir Aktif:</span>
+      <span id="lastActivity">-</span>
+    </div>
+  </div>
+  
+  <div class="footer">
+    Made with ❤️ by HaikalE
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
