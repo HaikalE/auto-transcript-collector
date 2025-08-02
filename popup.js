@@ -1,11 +1,11 @@
-// popup.js - URL Monitor v3.0
+// popup.js - Smart URL Monitor v3.1
 
 // Elements
 const toggleBtn = document.getElementById('toggleBtn');
 const clearBtn = document.getElementById('clearBtn');
 const exportBtn = document.getElementById('exportBtn');
 const totalCount = document.getElementById('totalCount');
-const detectedCount = document.getElementById('detectedCount');
+const filteredCount = document.getElementById('filteredCount');
 const statusText = document.getElementById('statusText');
 const statusDot = document.getElementById('statusDot');
 const urlList = document.getElementById('urlList');
@@ -14,12 +14,12 @@ const emptyState = document.getElementById('emptyState');
 // State
 let isActive = false;
 let urls = [];
-let stats = { detected: 0, total: 0 };
+let stats = { detected: 0, filtered: 0, total: 0 };
 let isProcessing = false;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎉 URL Monitor popup loading...');
+  console.log('🎉 Smart URL Monitor popup loading...');
   
   setTimeout(loadState, 100);
   
@@ -37,11 +37,11 @@ function loadState() {
         console.error('Error loading state:', chrome.runtime.lastError.message);
         isActive = false;
         urls = [];
-        stats = { detected: 0, total: 0 };
+        stats = { detected: 0, filtered: 0, total: 0 };
       } else if (response) {
         isActive = response.isActive || false;
         urls = response.urls || [];
-        stats = response.stats || { detected: 0, total: 0 };
+        stats = response.stats || { detected: 0, filtered: 0, total: 0 };
       }
       
       updateUI();
@@ -52,7 +52,7 @@ function loadState() {
     console.error('Error in loadState:', error);
     isActive = false;
     urls = [];
-    stats = { detected: 0, total: 0 };
+    stats = { detected: 0, filtered: 0, total: 0 };
     updateUI();
     renderUrlList();
   }
@@ -83,7 +83,7 @@ function handleToggleClick() {
         isActive = newState;
         console.log('✅ Toggle successful, new state:', isActive);
         showNotification(
-          isActive ? '✅ URL monitoring started!' : '⏹️ Monitoring stopped!',
+          isActive ? '✅ Smart monitoring started!' : '⏹️ Monitoring stopped!',
           'success'
         );
       } else {
@@ -104,14 +104,14 @@ function handleToggleClick() {
 
 // Handle clear URLs
 function handleClearClick() {
-  if (confirm('Clear all collected URLs?')) {
+  if (confirm('Clear all collected URLs and reset filter stats?')) {
     chrome.runtime.sendMessage({ action: 'clearUrls' }, function(response) {
       if (response && response.success) {
         urls = [];
-        stats = { detected: 0, total: 0 };
+        stats = { detected: 0, filtered: 0, total: 0 };
         updateUI();
         renderUrlList();
-        showNotification('🗑️ URLs cleared!', 'success');
+        showNotification('🗑️ URLs cleared & stats reset!', 'success');
       }
     });
   }
@@ -120,13 +120,13 @@ function handleClearClick() {
 // Handle export URLs
 function handleExportClick() {
   if (urls.length === 0) {
-    showNotification('⚠️ No URLs to export', 'error');
+    showNotification('⚠️ No quality URLs to export', 'error');
     return;
   }
   
   chrome.runtime.sendMessage({ action: 'exportUrls' }, function(response) {
     if (response && response.success) {
-      showNotification('📄 URLs exported successfully!', 'success');
+      showNotification(`📄 ${urls.length} quality URLs exported!`, 'success');
     } else {
       showNotification('❌ Export failed', 'error');
     }
@@ -140,18 +140,16 @@ function updateUI() {
     if (isActive) {
       toggleBtn.className = 'control-btn stop-btn';
       toggleBtn.textContent = '⏹️ STOP';
-      statusText.innerHTML = '<span class="status-indicator status-active" id="statusDot"></span>ACTIVE';
-      statusDot.className = 'status-indicator status-active';
+      statusText.innerHTML = '<span class="status-indicator status-active"></span>ON';
     } else {
       toggleBtn.className = 'control-btn start-btn';
       toggleBtn.textContent = '🚀 START';
-      statusText.innerHTML = '<span class="status-indicator status-inactive" id="statusDot"></span>STOPPED';
-      statusDot.className = 'status-indicator status-inactive';
+      statusText.innerHTML = '<span class="status-indicator status-inactive"></span>OFF';
     }
     
     // Update stats
     totalCount.textContent = stats.total || 0;
-    detectedCount.textContent = stats.detected || 0;
+    filteredCount.textContent = stats.filtered || 0;
     
     console.log('🔄 UI updated:', { isActive, stats });
     
@@ -183,17 +181,17 @@ function renderUrlList() {
       urlList.appendChild(urlElement);
     });
     
-    console.log('📝 URL list rendered:', urls.length, 'items');
+    console.log('📝 URL list rendered:', urls.length, 'quality items');
     
   } catch (error) {
     console.error('❌ Error rendering URL list:', error);
   }
 }
 
-// Create URL element
+// Create URL element with type indicators
 function createUrlElement(urlItem, index) {
   const div = document.createElement('div');
-  div.className = 'url-item';
+  div.className = `url-item ${urlItem.urlType || 'stream'}`;
   div.setAttribute('data-url', urlItem.url);
   
   // Truncate long domains
@@ -204,13 +202,24 @@ function createUrlElement(urlItem, index) {
   const urlPreview = urlItem.url.length > 60 ? 
     urlItem.url.substring(0, 57) + '...' : urlItem.url;
   
+  // Create badges
+  let badges = '';
+  if (urlItem.oParam) {
+    const paramPreview = urlItem.oParam.length > 15 ? 
+      urlItem.oParam.substring(0, 15) + '...' : urlItem.oParam;
+    badges += `<span class="url-param">?o=${paramPreview}</span>`;
+  }
+  if (urlItem.urlType && urlItem.urlType !== 'stream') {
+    badges += `<span class="url-type">${urlItem.urlType}</span>`;
+  }
+  
   div.innerHTML = `
     <div class="url-header">
       <div class="url-domain">${domain}</div>
       <div class="url-time">${urlItem.timeString}</div>
     </div>
     <div class="url-preview">${urlPreview}</div>
-    ${urlItem.oParam ? `<div class="url-param">?o=${urlItem.oParam.substring(0, 20)}${urlItem.oParam.length > 20 ? '...' : ''}</div>` : ''}
+    <div class="url-badges">${badges}</div>
   `;
   
   // Click handler to open URL
@@ -220,7 +229,7 @@ function createUrlElement(urlItem, index) {
       url: urlItem.url 
     }, function(response) {
       if (response && response.success) {
-        showNotification('🌐 URL opened in new tab', 'success');
+        showNotification('🌐 Quality URL opened in new tab', 'success');
       }
     });
   });
@@ -269,7 +278,7 @@ function showNotification(message, type) {
       notification.style.opacity = '1';
     }, 10);
     
-    // Remove after 2 seconds
+    // Remove after 2.5 seconds
     setTimeout(() => {
       if (notification.parentNode) {
         notification.style.opacity = '0';
@@ -279,7 +288,7 @@ function showNotification(message, type) {
           }
         }, 300);
       }
-    }, 2000);
+    }, 2500);
     
   } catch (error) {
     console.error('Error showing notification:', error);
@@ -306,8 +315,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       updateUI();
       renderUrlList();
       
-      // Visual feedback
-      showNotification(`🎯 New URL detected: ${message.data.domain}`, 'success');
+      // Visual feedback with URL type
+      const urlType = message.data.urlType || 'stream';
+      showNotification(`🛡️ Quality ${urlType} URL detected: ${message.data.domain}`, 'success');
     }
     
     if (message.action === 'stateUpdate') {
@@ -322,4 +332,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-console.log('🎉 URL Monitor popup loaded - DevTools Network automation!');
+console.log('🎉 Smart URL Monitor popup loaded - Intelligent filtering active!');
