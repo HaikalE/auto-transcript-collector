@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Auto Transcript Collector",
-  "version": "2.0",
-  "description": "LIGHTWEIGHT: Simple START/STOP untuk deteksi URL transkrip (?o=). Resource-efficient!",
+  "version": "2.1",
+  "description": "STABLE: Simple START/STOP untuk deteksi URL transkrip (?o=). Resource-efficient & crash-free!",
   "permissions": [
     "webRequest",
     "downloads",
@@ -19,6 +19,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Auto Transcript Collector - START/STOP"
+    "default_title": "Auto Transcript Collector - Stable"
   }
 }
