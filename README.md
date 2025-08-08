@@ -1,232 +1,238 @@
-# Smart URL Monitor v3.1 🛡️
+# 🎯 Smart URL Monitor - Professional Network Analytics
 
-🚀 **Intelligent URL Collector** with **Smart Filtering** to prevent unwanted downloads. Perfect solution for URLs with `?o=` parameter!
+<div align="center">
 
-## 🛡️ **SMART FILTERING - NO MORE UNWANTED DOWNLOADS!**
+![Version](https://img.shields.io/badge/version-3.3-blue)
+![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-green)
+![Themes](https://img.shields.io/badge/themes-140+-purple)
+![License](https://img.shields.io/badge/license-MIT-orange)
 
-**✅ PROBLEM SOLVED v3.1:**
-- ❌ ~~Range URLs auto-downloading files like "92659468-93644626"~~
-- ❌ ~~Chunk requests causing unwanted downloads~~
-- ❌ ~~Segment URLs downloading media files~~
-- ❌ ~~Manifest files triggering downloads~~
+**Intelligent URL collector with smart filtering, beautiful themes, and Netflix transcript viewer**
 
-**🎯 SMART SOLUTION:**
-- ✅ **Intelligent filtering** prevents unwanted downloads
-- ✅ **Only quality URLs** shown in clickable list
-- ✅ **Safe browsing** - all clicks open viewable content
-- ✅ **Filter statistics** show protection level
+*Avoids unwanted downloads • Shows only quality URLs • Professional monitoring interface*
 
-## 🎯 **Perfect URL Classification**
+</div>
 
-### ✅ **GOOD URLs (Shown):**
-```
-https://site.com/?o=1&v=259&e=1754189090&t=hgRICqpjCcAL...
-```
-→ **Opens in browser, viewable content** ✅
+## 🌟 Key Features
 
-### 🚫 **BAD URLs (Filtered Out):**
-```
-https://site.com/range/92659468-93644626?o=1&v=259&e=1754189130&t=IN9l...
-```
-→ **Would download file "92659468-93644626"** → **🛡️ BLOCKED!**
+### 🎨 **140+ Beautiful Themes**
+- **Complete customization** with color palettes from popular communities
+- **Search & favorites** system for easy theme management  
+- **HCI compliant** text colors for optimal readability
+- **Instant preview** - see changes in real-time
+- **Auto-save** settings across browser sessions
 
-## ⚡ **Key Features**
+### 🎬 **Netflix Transcript Viewer**
+- **TTML parser** for Netflix subtitle files
+- **YouTube-style transcript** with clickable timestamps
+- **Seek integration** - click any transcript line to jump to that moment
+- **Smart detection** - automatically shows transcript button for Netflix URLs
+- **Professional UI** with responsive modal design
 
-- **🛡️ Smart Filtering**: Prevents unwanted downloads automatically
-- **🔍 Auto-Detection**: Monitor network requests for `?o=` parameter
-- **📋 Clickable URLs**: Safe URLs displayed in popup list
-- **📊 Filter Statistics**: See how many downloads prevented
-- **📄 Export Function**: Save quality URL collections
-- **🗑️ Clear Management**: Reset URLs and filter stats
-- **⏱️ Real-time**: URLs appear instantly when detected
-- **🎯 Type Classification**: Stream, range, segment identification
+### 🔍 **Smart URL Filtering** 
+- **Intelligent detection** of quality URLs with `?o=` parameter
+- **Unwanted download prevention** - filters out common file extensions  
+- **Real-time monitoring** with visual feedback
+- **Domain categorization** and URL type detection
+- **Professional statistics** tracking
 
-## 🚀 **Installation**
+### 📊 **Analytics Dashboard**
+- **Live stats** - Quality URLs vs Filtered count
+- **Visual indicators** for system status
+- **Export functionality** for collected URLs
+- **Professional card-based** interface design
+- **Real-time notifications** with custom styling
 
-```bash
-git clone https://github.com/HaikalE/auto-transcript-collector.git
-cd auto-transcript-collector
-```
+## 🎯 What Makes This Extension Special?
 
-**‼️ REMOVE any previous version completely!**
+### ✨ **Theme System**
+From minimalist to vibrant, choose from carefully curated color palettes:
+- 🌙 **Dark themes**: `shadow`, `dracula`, `nord`, `matrix`
+- 🌸 **Pastel**: `magic girl`, `lavender`, `bingsu`, `pastel`  
+- 🎮 **Gaming**: `cyberpunk`, `joker`, `tron orange`
+- 💼 **Professional**: `github`, `vscode`, `material`
 
-1. **Remove old extension** from `chrome://extensions/`
-2. **Download v3.1** (Smart Filtering)
-3. Enable "Developer mode"
-4. Click "Load unpacked"
-5. Select project folder
+### 🎬 **Netflix Integration**
+Revolutionary transcript viewing experience:
+- Parse Netflix TTML subtitle files
+- Click transcript lines to seek video
+- Professional YouTube-style interface
+- Real-time video control integration
 
-## 💡 **How to Use (Zero Downloads, Maximum Safety!)**
+### 🛡️ **Intelligent Filtering**
+Advanced algorithms prevent unwanted downloads:
+- Recognizes quality streaming URLs
+- Filters common file extensions (.zip, .exe, .pdf, etc.)
+- Domain-based categorization
+- Parameter analysis (`?o=` detection)
 
-### 1. **Click Extension Icon** 🛡️
-### 2. **Press START** (smart monitoring begins)
-### 3. **Browse websites** normally  
-### 4. **Quality URLs appear** automatically (downloads filtered out)
-### 5. **Click any URL** safely - no unwanted downloads!
+## 📥 Installation
 
-## ⚙️ **Smart Interface**
+1. **Download** the latest release or clone this repository
+2. **Open Chrome** and navigate to `chrome://extensions/`
+3. **Enable** "Developer mode" (toggle in top-right)
+4. **Click** "Load unpacked" and select the extension folder
+5. **Pin** the extension to your toolbar for easy access
 
-```
-🛡️ Smart URL Monitor
-  Filters out unwanted downloads automatically
+## 🎨 How to Use Themes
 
-[🚀 START] [🗑️ Clear] [📄 Export]
+1. **Click** the 🎨 palette icon in the extension header
+2. **Browse** through 140+ available themes
+3. **Search** for specific theme names or styles
+4. **Click** any theme to apply instantly
+5. **Star** ⭐ your favorites for quick access
+6. **Settings auto-save** - your choice persists!
 
-🛡️ Smart filtering prevents auto-downloads of range/chunk URLs
+## 🎬 Netflix Transcript Viewer
 
-📊 Good URLs: 5  |  Filtered: 12  |  Status: ON
+### For Netflix URLs:
+1. **Start monitoring** and browse Netflix
+2. **Look for** 🎬 transcript button on Netflix URLs
+3. **Click transcript button** to open viewer
+4. **Click any timestamp** to seek video to that moment
+5. **Enjoy** YouTube-style transcript navigation!
 
-🌐 Quality URLs (clickable)    [FILTERED]
-┌─────────────────────────────────────────┐
-│ 📋 ipv4-c003-hlp001-myrepublic... 15:42│ ← Safe to click!
-│ https://ipv4-c003...?o=1&v=259&e=1754..│
-│ ?o=1754188581        [stream]           │
-└─────────────────────────────────────────┘
+### Supported Features:
+- ✅ **TTML parsing** - Netflix subtitle format
+- ✅ **Timestamp seeking** - Jump to any moment  
+- ✅ **Professional UI** - Clean, responsive design
+- ✅ **Real-time control** - Seamless video integration
 
-Click any URL to open • Right-click to copy
-```
+## 🔧 Advanced Configuration
 
-## 🛡️ **Intelligent Filter Rules**
-
-| URL Pattern | Classification | Action | Reason |
-|-------------|---------------|--------|--------|
-| `/?o=123` | **Stream** | ✅ **SHOW** | Safe, viewable content |
-| `/range/12345-67890?o=` | **Range** | 🚫 **FILTER** | Auto-downloads chunks |
-| `/segment/abc?o=` | **Segment** | 🚫 **FILTER** | Media segments |
-| `/12345678?o=` | **Chunk** | 🚫 **FILTER** | Numeric chunks |
-| `/playlist.m3u8?o=` | **Manifest** | 🚫 **FILTER** | Playlist files |
-| `/video.mp4?o=` | **Media** | 🚫 **FILTER** | Direct media files |
-
-## 📊 **Performance & Safety**
-
-| Metric | Traditional | Smart Monitor v3.1 |
-|--------|-------------|-------------------|
-| **Unwanted Downloads** | 🔴 Many | 🟢 **ZERO** |
-| **URL Quality** | 🟡 Mixed | ✅ **100% Safe** |
-| **User Experience** | 🔴 Confusing | ✅ **Smooth** |
-| **Filter Efficiency** | ❌ None | ✅ **Intelligent** |
-| **Click Safety** | 🔴 Risky | 🟢 **Guaranteed** |
-
-## 🎯 **Real-World Example**
-
-**Netflix/Streaming Session:**
-- **Total URLs detected**: 25 with `?o=` parameter
-- **Range/chunk URLs filtered**: 20 (would cause downloads)
-- **Quality URLs shown**: 5 (safe, viewable content)
-- **Unwanted downloads prevented**: 20
-- **User clicks**: All safe, no downloads! ✅
-
-## 🔧 **Smart Filtering Technology**
-
-### 🛡️ **Multi-Layer Protection:**
+### URL Filtering Rules:
 ```javascript
-// Intelligent URL analysis
-function shouldFilterUrl(url) {
-  // Layer 1: Path structure analysis
-  if (pathname.includes('/range/')) return true;
-  
-  // Layer 2: Pattern matching  
-  if (pathname.match(/\/\d+-\d+/)) return true;
-  
-  // Layer 3: Keyword detection
-  if (pathname.includes('/segment/')) return true;
-  
-  // Layer 4: Extension filtering
-  if (mediaExtensions.some(ext => pathname.includes(ext))) return true;
-  
-  // Allow quality URLs
-  return false;
-}
+// Quality indicators the extension looks for:
+✅ URLs with '?o=' parameter
+✅ Streaming domains (netflix, youtube, etc.)
+✅ Media file extensions (.m3u8, .ts, .mp4)
+
+// Filtered out automatically:
+❌ Document files (.pdf, .doc, .txt)
+❌ Archive files (.zip, .rar, .7z)  
+❌ Executable files (.exe, .msi, .dmg)
+❌ Image files (.jpg, .png, .gif)
 ```
 
-### 📈 **Filter Statistics:**
-- **Real-time counting** of filtered URLs
-- **Protection level display** in popup
-- **Export includes filter info**
-- **Quality vs filtered ratio**
+### Theme Customization:
+Each theme consists of three colors:
+- **Primary**: Main background color
+- **Secondary**: Card/container background  
+- **Accent**: Text, borders, and highlights
 
-## 🎮 **Use Cases**
+## 🎯 Professional Use Cases
 
-### 🎬 **Media Streaming**
-- Detect main stream URLs safely
-- Filter out chunk downloads automatically
-- Quick access to viewable content only
+### 🎬 **Content Creators**
+- Monitor Netflix for subtitle analysis
+- Extract transcript data for content research
+- Professional theme matching brand colors
 
-### 📊 **API Monitoring**  
-- Track quality API calls with `?o=` tokens
-- Avoid downloading data chunks
-- Monitor clean authentication flows
+### 📊 **Network Analysts** 
+- Track quality streaming URLs
+- Analyze media delivery networks
+- Export data for further analysis
 
-### 🔍 **Research & Analysis**
-- Collect quality URLs for analysis
-- Export clean URL lists
-- Filter out noise automatically
+### 🎨 **UI/UX Designers**
+- 140+ color palette inspiration
+- HCI compliant color combinations
+- Professional interface design reference
 
-### 🛠️ **Development**
-- Debug network requests safely
-- Track specific URL patterns
-- Automated testing without downloads
+## 🔄 Version History
 
-## 📁 **File Structure**
+### 🎉 **v3.3** - Netflix Transcript Viewer
+- ✨ **Netflix transcript integration** with TTML parsing
+- 🎬 **Clickable timestamps** for video seeking
+- 🎨 **HCI compliant** theme text colors
+- 🔧 **Enhanced theme persistence** system
 
-```
-auto-transcript-collector/
-├── manifest.json              # v3.1 - Smart filtering config
-├── background.js              # Intelligent URL filtering engine
-├── popup.html                 # Smart interface with filter stats
-├── popup.js                   # Safe click handlers
-├── README.md                  # This documentation
-├── SMART-FILTERING-v3.1.md    # Detailed filtering guide
-└── LICENSE                    # MIT License
-```
+### 🎨 **v3.2** - Theme System
+- 🎨 **140+ color palettes** from design communities
+- ⭐ **Search & favorites** functionality
+- 💾 **Auto-save** theme preferences
+- 🎯 **Professional theme selector** interface
 
-## 📋 **Complete Changelog**
+### 🚀 **v3.1** - Smart Filtering  
+- 🧠 **Intelligent URL filtering** algorithms
+- 📊 **Professional analytics** dashboard
+- 🎨 **Beautiful UI** redesign
+- ⚡ **Enhanced performance** optimizations
 
-```
-[BREAKTHROUGH] 3.1 - Smart Filtering & Download Prevention
-✅ Intelligent URL classification system
-✅ Automatic filtering of range/chunk requests
-✅ Prevention of unwanted downloads
-✅ Filter statistics display
-✅ Quality-only URL collection
+### 🏗️ **v3.0** - Foundation
+- 🔍 **Core monitoring** functionality
+- 📋 **URL collection** system
+- 💾 **Export capabilities**
+- 🎯 **Parameter detection**
 
-[BREAKTHROUGH] 3.0 - URL Monitor & DevTools Automation
-✅ Complete URL collection system
-✅ Clickable URL list interface  
-✅ Real-time network monitoring
+## 🛠️ Technical Details
 
-[Previous versions focused on different approaches]
-```
+### 🏗️ **Architecture**
+- **Manifest V3** - Latest Chrome extension standard
+- **Service Worker** - Efficient background processing
+- **Chrome APIs** - Storage, tabs, scripting, webRequest
+- **Modern JavaScript** - ES6+ features and APIs
 
-## 🏆 **Current Status**
+### 🎨 **Design Philosophy**
+- **HCI Compliance** - Optimal color contrast ratios
+- **Responsive Design** - Works on all screen sizes
+- **Professional Aesthetics** - Clean, modern interface
+- **User Experience** - Intuitive, accessible interactions
 
-| Metric | Status |
-|--------|--------|
-| **Download Prevention** | 🛡️ **100% Effective** |
-| **URL Quality** | ✅ **Premium Only** |
-| **User Safety** | 🟢 **Guaranteed** |
-| **Filter Intelligence** | 🧠 **Advanced** |
-| **Click Confidence** | 💯 **Total** |
-| **Problem Resolution** | 🎯 **Complete** |
+### 📊 **Performance**
+- **Lightweight** - Minimal memory footprint
+- **Efficient Filtering** - Smart algorithm optimization  
+- **Fast Theme Switching** - CSS variables for instant updates
+- **Persistent Settings** - Chrome sync storage integration
 
-## 🔗 **Links**
+## 🎯 What's Next?
 
-- **Repository**: https://github.com/HaikalE/auto-transcript-collector
-- **Smart Filtering Guide**: [SMART-FILTERING-v3.1.md](SMART-FILTERING-v3.1.md)
-- **License**: MIT
+### 🚀 **Planned Features**
+- 🎨 **Custom theme creator** - Build your own color schemes
+- 📥 **Theme import/export** - Share themes with community
+- 🌍 **Multi-language** transcript support
+- 🤖 **AI-powered** URL categorization
+- 📱 **Mobile support** - Chrome mobile compatibility
+
+### 🎨 **Theme Roadmap**
+- 🎭 **Seasonal themes** - Dynamic color schemes
+- 🎬 **Animated themes** - Subtle motion effects
+- 🌈 **Gradient themes** - Modern gradient designs
+- 👥 **Community themes** - User-submitted palettes
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our contributing guidelines:
+
+1. **Fork** the repository
+2. **Create** a feature branch
+3. **Follow** our code style guidelines
+4. **Test** thoroughly before submitting
+5. **Submit** a pull request with clear description
+
+### 🎨 **Contributing Themes**
+Have a beautiful color palette? Share it with the community!
+- Follow the theme format: `['primary', 'secondary', 'accent']`
+- Ensure HCI compliance with proper contrast ratios
+- Test across different UI elements
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Design Communities** - For inspiring color palettes
+- **Chrome Extension** - For robust platform APIs  
+- **Open Source** - For collaborative development spirit
+- **User Feedback** - For continuous improvement suggestions
 
 ---
 
-## 🎯 **TL;DR**
+<div align="center">
 
-1. **Download v3.1** (Smart Filtering)
-2. **Remove any old version** completely
-3. **Install fresh**
-4. **Click START** monitoring
-5. **Browse normally** - only safe URLs appear
-6. **Click any URL** confidently - zero unwanted downloads!
-7. **Check filter stats** - see protection level
+**Made with ❤️ by the Smart URL Monitor Team**
 
-**Perfect Solution**: Extension sekarang **intelligent banget**! Otomatis **filter out URLs yang bikin unwanted downloads** kayak range requests. User **cuma lihat quality URLs** yang aman diklik. **No more random file downloads!** 🛡️
+*Transform your browsing experience with intelligent monitoring and beautiful themes*
 
-**Status**: 🎯 **SMART FILTERING ACTIVE - UNWANTED DOWNLOADS ELIMINATED FOREVER!**
+[![Download](https://img.shields.io/badge/Download-Chrome%20Extension-blue?style=for-the-badge)](https://github.com/HaikalE/auto-transcript-collector)
+
+</div>
