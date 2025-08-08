@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Smart URL Monitor (?o= detector)",
-  "version": "3.2",
-  "description": "Intelligent URL collector with smart filtering and 140+ beautiful themes. Avoids unwanted downloads, shows only quality URLs with ?o= parameter!",
+  "version": "3.3",
+  "description": "Intelligent URL collector with smart filtering, 140+ beautiful themes, and Netflix transcript viewer. Avoids unwanted downloads, shows only quality URLs!",
   "permissions": [
     "webRequest",
     "downloads",
     "storage",
     "activeTab",
-    "tabs"
+    "tabs",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -18,6 +19,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Smart URL Monitor - Intelligent filtering with beautiful themes"
+    "default_title": "Smart URL Monitor - Intelligent filtering with themes & transcripts"
   }
 }
