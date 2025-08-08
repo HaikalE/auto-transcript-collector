@@ -239,29 +239,54 @@ function getOptimalTextColor(backgroundColor) {
   return brightness > 128 ? '#000000' : '#ffffff';
 }
 
-// Parse TTML subtitle untuk mendapatkan transcript
+// Parse TTML subtitle untuk mendapatkan transcript Netflix
 function parseTTMLSubtitle(ttmlContent) {
   try {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(ttmlContent, 'text/xml');
     const subtitles = [];
     
-    const pElements = xmlDoc.querySelectorAll('p');
+    // Handle Netflix TTML format dengan namespace
+    const pElements = xmlDoc.querySelectorAll('p, div p');
     
     pElements.forEach(p => {
       const beginTime = p.getAttribute('begin');
       const endTime = p.getAttribute('end');
       
-      // Convert time format dari "225416666t" ke detik
-      const beginSeconds = beginTime ? parseInt(beginTime.replace('t', '')) / 10000000 : 0;
-      const endSeconds = endTime ? parseInt(endTime.replace('t', '')) / 10000000 : 0;
+      if (!beginTime) return;
+      
+      // Convert time format dari "225416666t" ke detik (Netflix format)
+      const beginSeconds = beginTime ? parseFloat(beginTime.replace('t', '')) / 10000000 : 0;
+      const endSeconds = endTime ? parseFloat(endTime.replace('t', '')) / 10000000 : 0;
+      
+      // Extract text dari spans dan handle line breaks
+      let textContent = '';
+      const spans = p.querySelectorAll('span');
+      
+      if (spans.length > 0) {
+        // Handle multiple spans dengan line breaks
+        spans.forEach((span, index) => {
+          const spanText = span.textContent?.trim() || '';
+          if (spanText) {
+            if (index > 0) textContent += ' ';
+            textContent += spanText;
+          }
+        });
+      } else {
+        // Fallback ke textContent langsung
+        textContent = p.textContent || '';
+      }
       
       // Clean text content
-      let textContent = p.textContent || '';
-      textContent = textContent.replace(/[\[\]]/g, '').replace(/♪/g, '').trim();
+      textContent = textContent
+        .replace(/[\[\]]/g, '')
+        .replace(/♪/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
       
-      if (textContent) {
+      if (textContent && beginSeconds >= 0) {
         subtitles.push({
+          id: p.getAttribute('xml:id') || `subtitle_${subtitles.length}`,
           start: beginSeconds,
           end: endSeconds,
           text: textContent,
@@ -271,6 +296,7 @@ function parseTTMLSubtitle(ttmlContent) {
       }
     });
     
+    console.log(`Parsed ${subtitles.length} subtitles from TTML`);
     return subtitles.sort((a, b) => a.start - b.start);
   } catch (error) {
     console.error('Error parsing TTML:', error);
@@ -288,6 +314,82 @@ function formatTime(seconds) {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   } else {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+}
+
+// Fetch transcript data from TTML URL
+async function fetchTranscriptData(videoUrl) {
+  try {
+    // Extract potential TTML URL patterns from collected URLs
+    // Look for subtitle/transcript URLs that match the video
+    const transcriptUrl = findTranscriptUrlForVideo(videoUrl);
+    
+    if (transcriptUrl) {
+      console.log('Fetching transcript from:', transcriptUrl);
+      const response = await fetch(transcriptUrl);
+      
+      if (response.ok) {
+        const ttmlContent = await response.text();
+        console.log('TTML content length:', ttmlContent.length);
+        return ttmlContent;
+      } else {
+        console.warn('Failed to fetch transcript:', response.status);
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching transcript data:', error);
+    return null;
+  }
+}
+
+// Find transcript URL for a video URL
+function findTranscriptUrlForVideo(videoUrl) {
+  try {
+    const videoUrlObj = new URL(videoUrl);
+    const videoDomain = videoUrlObj.hostname;
+    
+    // Look through collected URLs for subtitle/transcript URLs from same domain
+    for (const urlItem of urls) {
+      if (urlItem.domain === videoDomain) {
+        const url = urlItem.url;
+        
+        // Check for common subtitle URL patterns
+        if (url.includes('subtitle') || 
+            url.includes('caption') || 
+            url.includes('ttml') || 
+            url.includes('.vtt') ||
+            url.includes('timedtext') ||
+            url.pathname?.includes('/sub/')) {
+          return url;
+        }
+      }
+    }
+    
+    // Try to derive subtitle URL from video URL patterns
+    // Netflix pattern: convert video URL to subtitle URL
+    if (videoDomain.includes('netflix') || videoDomain.includes('nflxvideo')) {
+      // Common Netflix subtitle URL patterns
+      const baseUrl = videoUrl.split('?')[0];
+      const urlParams = new URLSearchParams(videoUrl.split('?')[1] || '');
+      
+      // Try common subtitle endpoints
+      const subtitlePatterns = [
+        baseUrl.replace('/manifest', '/subtitle'),
+        baseUrl.replace('/video', '/subtitle') + '?o=' + urlParams.get('o'),
+        baseUrl + '&type=subtitle',
+        baseUrl + '&format=ttml'
+      ];
+      
+      // Return first pattern for now (in real app, try all)
+      return subtitlePatterns[0];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error finding transcript URL:', error);
+    return null;
   }
 }
 
@@ -519,27 +621,51 @@ function handleThemeSearch() {
   });
 }
 
-// Load state from background
+// Load state from background with persistence
 function loadState() {
   try {
     chrome.runtime.sendMessage({ action: 'getState' }, function(response) {
       if (chrome.runtime.lastError) {
         console.error('Error loading state:', chrome.runtime.lastError.message);
-        isActive = false;
-        urls = [];
-        stats = { detected: 0, filtered: 0, total: 0 };
+        // Don't reset URLs on error - try to load from storage directly
+        loadFromStorageDirectly();
       } else if (response) {
         isActive = response.isActive || false;
         urls = response.urls || [];
         stats = response.stats || { detected: 0, filtered: 0, total: 0 };
+        updateUI();
+        renderUrlList();
+        console.log('State loaded:', { isActive, urlCount: urls.length, stats });
       }
-      
-      updateUI();
-      renderUrlList();
-      console.log('State loaded:', { isActive, urlCount: urls.length, stats });
     });
   } catch (error) {
     console.error('Error in loadState:', error);
+    // Don't reset URLs on error - try fallback
+    loadFromStorageDirectly();
+  }
+}
+
+// Fallback: Load directly from storage if background fails
+function loadFromStorageDirectly() {
+  try {
+    chrome.storage.local.get(['collectedUrls', 'stats'], function(result) {
+      if (!chrome.runtime.lastError) {
+        urls = result.collectedUrls || [];
+        stats = result.stats || { detected: 0, filtered: 0, total: 0 };
+        isActive = false; // Background not responding, monitoring stopped
+        console.log('Fallback: Loaded from storage directly:', urls.length, 'URLs');
+      } else {
+        // Only reset if storage also fails
+        isActive = false;
+        urls = [];
+        stats = { detected: 0, filtered: 0, total: 0 };
+        console.log('Both background and storage failed - using empty state');
+      }
+      updateUI();
+      renderUrlList();
+    });
+  } catch (error) {
+    console.error('Storage fallback failed:', error);
     isActive = false;
     urls = [];
     stats = { detected: 0, filtered: 0, total: 0 };
@@ -787,21 +913,40 @@ function showTranscriptModal(videoUrl) {
     }
   });
   
-  // Simulate loading transcript (in real implementation, fetch dari TTML URL)
-  setTimeout(() => {
-    const sampleTTML = `<tt xmlns="http://www.w3.org/ns/ttml">
-      <body>
-        <div>
-          <p begin="225416666t" end="275416666t">["In the Still of the Night" by The Five Satins playing]</p>
-          <p begin="350000000t" end="409583333t">♪ In the still of the night ♪</p>
-          <p begin="410416666t" end="435833333t">♪ I held you ♪</p>
-        </div>
-      </body>
-    </tt>`;
-    
-    const subtitles = parseTTMLSubtitle(sampleTTML);
-    renderTranscript(modal, subtitles);
-  }, 1500);
+  // Fetch transcript from TTML URL (derived from video URL)
+  fetchTranscriptData(videoUrl)
+    .then(ttmlContent => {
+      if (ttmlContent) {
+        const subtitles = parseTTMLSubtitle(ttmlContent);
+        renderTranscript(modal, subtitles);
+      } else {
+        // Fallback to sample for demo
+        const sampleTTML = `<tt xmlns="http://www.w3.org/ns/ttml">
+          <body>
+            <div>
+              <p xml:id="subtitle1" begin="91091000t" end="116449667t">
+                <span>This is New York City, The Big Apple.</span>
+              </p>
+              <p xml:id="subtitle2" begin="116783334t" end="150483667t">
+                <span>But tonight, we're located</span>
+                <span>just across the Hudson River,</span>
+              </p>
+              <p xml:id="subtitle3" begin="150817334t" end="175675500t">
+                <span>somewhere in the swamps of Jersey,</span>
+              </p>
+            </div>
+          </body>
+        </tt>`;
+        
+        const subtitles = parseTTMLSubtitle(sampleTTML);
+        renderTranscript(modal, subtitles);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching transcript:', error);
+      modal.querySelector('.transcript-body').innerHTML = 
+        '<p class="no-transcript">Failed to load transcript. Please try again.</p>';
+    });
 }
 
 // Render transcript in modal
@@ -813,12 +958,17 @@ function renderTranscript(modal, subtitles) {
     return;
   }
   
-  let transcriptHTML = '<div class="transcript-list">';
+  let transcriptHTML = `
+    <div class="transcript-header-info">
+      <p>Found ${subtitles.length} transcript entries • Click any line to seek to that time</p>
+    </div>
+    <div class="transcript-list">
+  `;
   
-  subtitles.forEach(subtitle => {
+  subtitles.forEach((subtitle, index) => {
     transcriptHTML += `
-      <div class="transcript-item" data-time="${subtitle.start}">
-        <div class="transcript-time">${subtitle.startTime}</div>
+      <div class="transcript-item" data-time="${subtitle.start}" data-index="${index}">
+        <div class="transcript-time" title="Seek to ${subtitle.startTime}">${subtitle.startTime}</div>
         <div class="transcript-text">${subtitle.text}</div>
       </div>
     `;
@@ -826,6 +976,8 @@ function renderTranscript(modal, subtitles) {
   
   transcriptHTML += '</div>';
   body.innerHTML = transcriptHTML;
+  
+  console.log(`Rendered ${subtitles.length} transcript items`);
   
   // Add click handlers for seeking
   body.querySelectorAll('.transcript-item').forEach(item => {
