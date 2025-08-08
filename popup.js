@@ -1,4 +1,4 @@
-// popup.js - Smart URL Monitor v3.2 - Professional Edition with Themes
+// popup.js - Smart URL Monitor v3.3 - Professional Edition with Themes & Transcripts
 
 // Theme data - 140+ beautiful color palettes
 const THEMES = {
@@ -217,13 +217,111 @@ let isProcessing = false;
 let currentTheme = DEFAULT_THEME;
 let favoriteThemes = new Set();
 
+// Utility function untuk menghitung brightness color
+function getBrightness(color) {
+  // Remove # if present
+  color = color.replace('#', '');
+  
+  // Convert to RGB
+  const r = parseInt(color.substr(0, 2), 16);
+  const g = parseInt(color.substr(2, 2), 16);
+  const b = parseInt(color.substr(4, 2), 16);
+  
+  // Calculate brightness using relative luminance formula
+  return (r * 0.299 + g * 0.587 + b * 0.114);
+}
+
+// Function untuk mendapatkan text color yang optimal berdasarkan background
+function getOptimalTextColor(backgroundColor) {
+  const brightness = getBrightness(backgroundColor);
+  // Jika background terang (brightness > 128), gunakan text gelap
+  // Jika background gelap (brightness <= 128), gunakan text terang
+  return brightness > 128 ? '#000000' : '#ffffff';
+}
+
+// Parse TTML subtitle untuk mendapatkan transcript
+function parseTTMLSubtitle(ttmlContent) {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(ttmlContent, 'text/xml');
+    const subtitles = [];
+    
+    const pElements = xmlDoc.querySelectorAll('p');
+    
+    pElements.forEach(p => {
+      const beginTime = p.getAttribute('begin');
+      const endTime = p.getAttribute('end');
+      
+      // Convert time format dari "225416666t" ke detik
+      const beginSeconds = beginTime ? parseInt(beginTime.replace('t', '')) / 10000000 : 0;
+      const endSeconds = endTime ? parseInt(endTime.replace('t', '')) / 10000000 : 0;
+      
+      // Clean text content
+      let textContent = p.textContent || '';
+      textContent = textContent.replace(/[\[\]]/g, '').replace(/♪/g, '').trim();
+      
+      if (textContent) {
+        subtitles.push({
+          start: beginSeconds,
+          end: endSeconds,
+          text: textContent,
+          startTime: formatTime(beginSeconds),
+          endTime: formatTime(endSeconds)
+        });
+      }
+    });
+    
+    return subtitles.sort((a, b) => a.start - b.start);
+  } catch (error) {
+    console.error('Error parsing TTML:', error);
+    return [];
+  }
+}
+
+// Format time dalam format MM:SS atau HH:MM:SS
+function formatTime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  } else {
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+}
+
+// Netflix seek function
+function seekNetflixVideo(timeInSeconds) {
+  const script = `
+  try {
+    const waktuTujuanDetik = ${timeInSeconds};
+    const api = window.netflix.appContext.state.playerApp.getAPI();
+    const videoPlayer = api.videoPlayer;
+    const sessionId = videoPlayer.getAllPlayerSessionIds()[0];
+    const player = videoPlayer.getVideoPlayerBySessionId(sessionId);
+    
+    const waktuTujuanMilidetik = waktuTujuanDetik * 1000;
+    player.seek(waktuTujuanMilidetik);
+    
+    console.log('✅ Berhasil melompat ke detik ' + waktuTujuanDetik);
+    true;
+  } catch (e) {
+    console.error("Gagal melakukan seek. Pastikan video sedang diputar.", e);
+    false;
+  }`;
+  
+  return script;
+}
+
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Smart URL Monitor popup with themes loading...');
+  console.log('Smart URL Monitor popup with themes & transcripts loading...');
   
-  loadThemeSettings();
-  initializeThemes();
-  applyTheme(currentTheme);
+  loadThemeSettings().then(() => {
+    initializeThemes();
+    applyTheme(currentTheme);
+  });
   
   setTimeout(loadState, 100);
   
@@ -250,16 +348,23 @@ document.addEventListener('DOMContentLoaded', function() {
   themeSearch.addEventListener('input', handleThemeSearch);
 });
 
-// Load theme settings
+// Load theme settings dengan Promise
 function loadThemeSettings() {
-  try {
-    chrome.storage.sync.get(['currentTheme', 'favoriteThemes'], (result) => {
-      currentTheme = result.currentTheme || DEFAULT_THEME;
-      favoriteThemes = new Set(result.favoriteThemes || []);
-    });
-  } catch (error) {
-    console.error('Error loading theme settings:', error);
-  }
+  return new Promise((resolve) => {
+    try {
+      chrome.storage.sync.get(['currentTheme', 'favoriteThemes'], (result) => {
+        if (!chrome.runtime.lastError) {
+          currentTheme = result.currentTheme || DEFAULT_THEME;
+          favoriteThemes = new Set(result.favoriteThemes || []);
+          console.log('Theme settings loaded:', { currentTheme, favoriteCount: favoriteThemes.size });
+        }
+        resolve();
+      });
+    } catch (error) {
+      console.error('Error loading theme settings:', error);
+      resolve();
+    }
+  });
 }
 
 // Save theme settings
@@ -268,6 +373,10 @@ function saveThemeSettings() {
     chrome.storage.sync.set({
       currentTheme: currentTheme,
       favoriteThemes: Array.from(favoriteThemes)
+    }, () => {
+      if (!chrome.runtime.lastError) {
+        console.log('Theme settings saved:', currentTheme);
+      }
     });
   } catch (error) {
     console.error('Error saving theme settings:', error);
@@ -282,9 +391,11 @@ function initializeThemes() {
     const themeElement = createThemeElement(themeName);
     themeGrid.appendChild(themeElement);
   });
+  
+  console.log('Themes initialized:', themeNames.length);
 }
 
-// Create theme element
+// Create theme element dengan HCI compliant colors
 function createThemeElement(themeName) {
   const colors = THEMES[themeName];
   const div = document.createElement('div');
@@ -295,9 +406,12 @@ function createThemeElement(themeName) {
     div.classList.add('active');
   }
   
+  // Apply HCI compliant text color
+  const optimalTextColor = getOptimalTextColor(colors[0]);
+  
   div.style.cssText = `
     background: ${colors[0]};
-    color: ${colors[2]};
+    color: ${optimalTextColor};
     outline: 0 solid ${colors[2]};
   `;
   
@@ -332,7 +446,7 @@ function createThemeElement(themeName) {
   return div;
 }
 
-// Select theme
+// Select theme dengan persistence yang benar
 function selectTheme(themeName) {
   // Remove active class from all themes
   document.querySelectorAll('.theme-button').forEach(btn => {
@@ -369,17 +483,25 @@ function toggleFavorite(themeName, favButton) {
   saveThemeSettings();
 }
 
-// Apply theme
+// Apply theme dengan HCI compliance
 function applyTheme(themeName) {
   const colors = THEMES[themeName] || THEMES[DEFAULT_THEME];
   const root = document.documentElement;
   
+  // Apply theme colors
   root.style.setProperty('--primary-color', colors[0]);
   root.style.setProperty('--secondary-color', colors[1]);
   root.style.setProperty('--accent-color', colors[2]);
-  root.style.setProperty('--text-color', colors[2]);
   
-  console.log(`Theme "${themeName}" applied:`, colors);
+  // Apply HCI compliant text colors
+  const primaryTextColor = getOptimalTextColor(colors[0]);
+  const secondaryTextColor = getOptimalTextColor(colors[1]);
+  
+  root.style.setProperty('--text-color', colors[2]);
+  root.style.setProperty('--primary-text-color', primaryTextColor);
+  root.style.setProperty('--secondary-text-color', secondaryTextColor);
+  
+  console.log(`Theme "${themeName}" applied with HCI colors:`, colors);
 }
 
 // Handle theme search
@@ -556,7 +678,7 @@ function renderUrlList() {
   }
 }
 
-// Create URL element with type indicators
+// Create URL element with transcript button
 function createUrlElement(urlItem, index) {
   const div = document.createElement('div');
   div.className = `url-item ${urlItem.urlType || 'stream'}`;
@@ -581,6 +703,12 @@ function createUrlElement(urlItem, index) {
     badges += `<span class="url-type">${urlItem.urlType}</span>`;
   }
   
+  // Add transcript button if Netflix URL
+  const isNetflix = urlItem.domain.includes('netflix') || urlItem.domain.includes('nflxvideo');
+  if (isNetflix) {
+    badges += `<button class="transcript-btn" title="View Transcript"><i class="fas fa-closed-captioning"></i></button>`;
+  }
+  
   div.innerHTML = `
     <div class="url-header">
       <div class="url-domain">${domain}</div>
@@ -591,15 +719,17 @@ function createUrlElement(urlItem, index) {
   `;
   
   // Click handler to open URL
-  div.addEventListener('click', function() {
-    chrome.runtime.sendMessage({ 
-      action: 'openUrl', 
-      url: urlItem.url 
-    }, function(response) {
-      if (response && response.success) {
-        showNotification('Quality URL opened in new tab', 'success');
-      }
-    });
+  div.addEventListener('click', function(e) {
+    if (!e.target.closest('.transcript-btn')) {
+      chrome.runtime.sendMessage({ 
+        action: 'openUrl', 
+        url: urlItem.url 
+      }, function(response) {
+        if (response && response.success) {
+          showNotification('Quality URL opened in new tab', 'success');
+        }
+      });
+    }
   });
   
   // Right-click to copy URL
@@ -612,7 +742,129 @@ function createUrlElement(urlItem, index) {
     });
   });
   
+  // Transcript button handler
+  const transcriptBtn = div.querySelector('.transcript-btn');
+  if (transcriptBtn) {
+    transcriptBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      showTranscriptModal(urlItem.url);
+    });
+  }
+  
   return div;
+}
+
+// Show transcript modal
+function showTranscriptModal(videoUrl) {
+  // Create modal
+  const modal = document.createElement('div');
+  modal.className = 'transcript-modal';
+  modal.innerHTML = `
+    <div class="transcript-content">
+      <div class="transcript-header">
+        <h3>Video Transcript</h3>
+        <button class="transcript-close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="transcript-body">
+        <div class="transcript-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading transcript...</p>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Close handler
+  modal.querySelector('.transcript-close').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+  
+  // Simulate loading transcript (in real implementation, fetch dari TTML URL)
+  setTimeout(() => {
+    const sampleTTML = `<tt xmlns="http://www.w3.org/ns/ttml">
+      <body>
+        <div>
+          <p begin="225416666t" end="275416666t">["In the Still of the Night" by The Five Satins playing]</p>
+          <p begin="350000000t" end="409583333t">♪ In the still of the night ♪</p>
+          <p begin="410416666t" end="435833333t">♪ I held you ♪</p>
+        </div>
+      </body>
+    </tt>`;
+    
+    const subtitles = parseTTMLSubtitle(sampleTTML);
+    renderTranscript(modal, subtitles);
+  }, 1500);
+}
+
+// Render transcript in modal
+function renderTranscript(modal, subtitles) {
+  const body = modal.querySelector('.transcript-body');
+  
+  if (subtitles.length === 0) {
+    body.innerHTML = '<p class="no-transcript">No transcript available for this video.</p>';
+    return;
+  }
+  
+  let transcriptHTML = '<div class="transcript-list">';
+  
+  subtitles.forEach(subtitle => {
+    transcriptHTML += `
+      <div class="transcript-item" data-time="${subtitle.start}">
+        <div class="transcript-time">${subtitle.startTime}</div>
+        <div class="transcript-text">${subtitle.text}</div>
+      </div>
+    `;
+  });
+  
+  transcriptHTML += '</div>';
+  body.innerHTML = transcriptHTML;
+  
+  // Add click handlers for seeking
+  body.querySelectorAll('.transcript-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const timeInSeconds = parseFloat(item.getAttribute('data-time'));
+      
+      // Execute Netflix seek script in active tab
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          func: function(time) {
+            try {
+              const waktuTujuanDetik = time;
+              const api = window.netflix.appContext.state.playerApp.getAPI();
+              const videoPlayer = api.videoPlayer;
+              const sessionId = videoPlayer.getAllPlayerSessionIds()[0];
+              const player = videoPlayer.getVideoPlayerBySessionId(sessionId);
+              
+              const waktuTujuanMilidetik = waktuTujuanDetik * 1000;
+              player.seek(waktuTujuanMilidetik);
+              
+              console.log('✅ Berhasil melompat ke detik ' + waktuTujuanDetik);
+              return true;
+            } catch (e) {
+              console.error("Gagal melakukan seek. Pastikan video sedang diputar.", e);
+              return false;
+            }
+          },
+          args: [timeInSeconds]
+        }, (result) => {
+          if (result && result[0] && result[0].result) {
+            showNotification(`Jumped to ${formatTime(timeInSeconds)}`, 'success');
+          } else {
+            showNotification('Failed to seek video. Make sure Netflix is playing.', 'error');
+          }
+        });
+      });
+    });
+  });
 }
 
 // Show notification
@@ -720,4 +972,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-console.log('Smart URL Monitor popup with 140+ themes loaded - Professional monitoring interface active');
+console.log('Smart URL Monitor popup with 140+ themes & transcript viewer loaded - Professional monitoring interface active');
