@@ -1,4 +1,195 @@
-// popup.js - Smart URL Monitor v3.1 - Professional Edition
+// popup.js - Smart URL Monitor v3.2 - Professional Edition with Themes
+
+// Theme data - 140+ beautiful color palettes
+const THEMES = {
+  'dino': ['#40d672', '#d5d5d5', '#1d221f'],
+  'magic girl': ['#f5b1cc', '#93e8d3', '#00ac8c'],
+  'milkshake': ['#212b43', '#62cfe6', '#212b43'],
+  'modern ink': ['#ff360d', '#b7b7b7', '#000000'],
+  'ms cupcakes': ['#5ed5f3', '#d64090', '#0a282f'],
+  'sewing tin light': ['#2d2076', '#385eca', '#2d2076'],
+  'lilac mist': ['#b94189', '#e094c2', '#5c2954'],
+  'rose pine dawn': ['#56949f', '#c4a7e7', '#286983'],
+  'soaring skies': ['#55c6f0', '#1e107a', '#1d1e1e'],
+  'rainbow trail': ['#363636', '#4f4f4f', '#1f1f1f'],
+  'nord light': ['#8fbcbb', '#6a7791', '#8fbcbb'],
+  'solarized light': ['#859900', '#2aa198', '#181819'],
+  'tangerine': ['#fe5503', '#ff9562', '#3d1705'],
+  'camping': ['#618c56', '#c2b8aa', '#3c403b'],
+  'slambook': ['#13005A', '#1c82adc4', '#125d98'],
+  'paper': ['#444444', '#b2b2b2', '#444444'],
+  'desert oasis': ['#d19d01', '#0061fe', '#332800'],
+  'iceberg light': ['#2d539e', '#adb1c4', '#33374c'],
+  'cheesecake': ['#8e2949', '#d91c81', '#3a3335'],
+  '9009': ['#080909', '#99947f', '#080909'],
+  'lil dragon': ['#8a5bd6', '#a28db8', '#212b43'],
+  'blueberry light': ['#506477', '#92a4be', '#678198'],
+  'witch girl': ['#56786a', '#ddb4a7', '#56786a'],
+  'terrazzo': ['#e0794e', '#688e8f', '#023e3b'],
+  'darling': ['#ffffff', '#a30000', '#ffffff'],
+  'serika': ['#e2b714', '#aaaeb3', '#323437'],
+  'gruvbox light': ['#689d6a', '#a89984', '#3c3836'],
+  'repose light': ['#5f605e', '#8f8e84', '#333538'],
+  'godspeed': ['#9abbcd', '#ada998', '#646669'],
+  'dollar': ['#6b886b', '#8a9b69', '#555a56'],
+  'dmg': ['#ae185e', '#3846b1', '#414141'],
+  'modern dolch light': ['#8fd1c3', '#acacac', '#454545'],
+  'olive': ['#92946f', '#b7b39e', '#373731'],
+  'taro': ['#130f1a', '#6f6c91', '#130f1a'],
+  'shoko': ['#81c4dd', '#7599b1', '#3b4c58'],
+  'beach': ['#96ceb4', '#ffcc5c', '#5b7869'],
+  'breeze': ['#7d67a9', '#3a98b9', '#1b4c5e'],
+  'froyo': ['#7b7d7d', '#b29c5e', '#7b7d7d'],
+  'mr sleeves': ['#daa99b', '#9a9fa1', '#1d1d1d'],
+  'fruit chew': ['#5c1e5f', '#b49cb5', '#282528'],
+  'peaches': ['#dd7a5f', '#e7b28e', '#5f4c41'],
+  'hanok': ['#513a2a', '#8b6f5c', '#393b3b'],
+  'retro': ['#1d1b17', '#918b7d', '#1d1b17'],
+  'pastel': ['#fbf4b6', '#b4e9ff', '#6d5c6f'],
+  'vaporwave': ['#e368da', '#7c7faf', '#f1ebf1'],
+  'frozen llama': ['#6d44a6', '#b690fd', '#ffffff'],
+  'mizu': ['#fcfbf6', '#85a5bb', '#1a2633'],
+  'pink lemonade': ['#f6a192', '#f6b092', '#fcfcf8'],
+  'tiramisu': ['#c0976f', '#c0976f', '#7d5448'],
+  'macroblank': ['#c13117', '#717977', '#490909'],
+  'snes': ['#553d94', '#9f8ad4', '#2e2e2e'],
+  'strawberry': ['#fcfcf8', '#e53c58', '#fcfcf8'],
+  'creamsicle': ['#fcfcf8', '#ff661f', '#fcfcf8'],
+  'lavender': ['#e4e3e9', '#e4e3e9', '#2f2a41'],
+  'bingsu': ['#83616e', '#48373d', '#ebe6ea'],
+  'cafe': ['#14120f', '#d4d2d1', '#14120f'],
+  'fleuriste': ['#405a52', '#64374d', '#091914'],
+  'miami': ['#05dfd7', '#94294c', '#f0e9ec'],
+  'iv clover': ['#573e40', '#353535', '#3b2d3b'],
+  'mexican': ['#b12189', '#333333', '#eeeeee'],
+  'botanical': ['#eaf1f3', '#495755', '#eaf1f3'],
+  'lime': ['#93c247', '#4b5257', '#bfcfdc'],
+  'honey': ['#fff546', '#a66b00', '#f3eecb'],
+  'leather': ['#ffe4bc', '#81482b', '#ffe4bc'],
+  'diner': ['#c3af5b', '#445c7f', '#dfdbc8'],
+  'alpine': ['#ffffff', '#9994b8', '#ffffff'],
+  'dualshot': ['#212222', '#aaaaaa', '#212222'],
+  'fundamentals': ['#7fa482', '#cac4be', '#131313'],
+  'our theme': ['#fcd116', '#6d0f19', '#ffffff'],
+  'ez mode': ['#fa62d5', '#138bf7', '#ffffff'],
+  'evil eye': ['#f7f2ea', '#01589f', '#171718'],
+  'menthol': ['#ffffff', '#186544', '#ffffff'],
+  'comfy': ['#f8cdc6', '#9ec1cc', '#f5efee'],
+  'trackday': ['#e0513e', '#5c7eb9', '#cfcfcf'],
+  'muted': ['#c5b4e3', '#939eae', '#b1e4e3'],
+  'red samurai': ['#c79e6e', '#55131b', '#e2dad0'],
+  'sweden': ['#ffcc02', '#57abdb', '#ffffff'],
+  'passion fruit': ['#f4a3b4', '#9994b8', '#ffffff'],
+  'suisei': ['#bef0ff', '#fe9841', '#dbdeeb'],
+  'striker': ['#d7dcda', '#0f2d4e', '#d6dbd9'],
+  'cy red': ['#e55050', '#ff6060', '#ffaaaa'],
+  'grand prix': ['#c0d036', '#5c6c80', '#c1c7d7'],
+  'deku': ['#b63530', '#255458', '#f7f2ea'],
+  'hedge': ['#6a994e', '#ede5b4', '#f7f1d6'],
+  'retrocast': ['#88dbdf', '#f3e03b', '#ffffff'],
+  'sewing tin': ['#f2ce83', '#446ad5', '#ffffff'],
+  'bento': ['#ff7a90', '#4a768d', '#fffaf8'],
+  '8008': ['#f44c7f', '#939eae', '#e9ecf0'],
+  'matcha moccha': ['#7ec160', '#9e6749', '#ecddcc'],
+  'fledgling': ['#fc6e83', '#8e5568', '#e6d5d3'],
+  'onedark': ['#61afef', '#eceff4', '#98c379'],
+  'copper': ['#b46a55', '#7ebab5', '#e7e0de'],
+  'graen': ['#a59682', '#181d1a', '#a59682'],
+  'cherry blossom': ['#d65ccc', '#787d82', '#d1d0c5'],
+  'discord': ['#5a65ea', '#565861', '#dcdee3'],
+  'serika dark': ['#e2b714', '#646669', '#d1d0c5'],
+  'repose dark': ['#d6d2bc', '#8f8e84', '#d6d2bc'],
+  'rose pine moon': ['#9ccfd8', '#c4a7e7', '#e0def4'],
+  'blueberry dark': ['#add7ff', '#5c7da5', '#91b4d5'],
+  'oblivion': ['#a5a096', '#5d6263', '#f7f5f1'],
+  'watermelon': ['#d6686f', '#3e7a65', '#cdc6bc'],
+  'carbon': ['#f66e0d', '#616161', '#f5e6c8'],
+  'future funk': ['#f7f2ea', '#c18fff', '#f7f2ea'],
+  'mint': ['#5cdb95', '#20688a', '#edf5e1'],
+  'sonokai': ['#9ed072', '#e7c664', '#e2e2e3'],
+  'laser': ['#009eaf', '#b82356', '#dbe7e8'],
+  'viridescent': ['#95d5b2', '#84a98c', '#e9f5db'],
+  'dracula': ['#bd93f9', '#6272a4', '#f8f8f2'],
+  'material': ['#80cbc4', '#4c6772', '#e6edf3'],
+  'modern dolch': ['#7eddd3', '#54585c', '#e3e6eb'],
+  'superuser': ['#43ffaf', '#526777', '#e5f7ef'],
+  'rudy': ['#af8f5c', '#3a506c', '#c9c8bf'],
+  'bushido': ['#ec4c56', '#596172', '#f6f0e9'],
+  'mashu': ['#76689a', '#d8a0a6', '#f1e2e4'],
+  'nord': ['#88C0D0', '#2E3440', '#88C0D0'],
+  'bouquet': ['#eaa09c', '#408e7b', '#e9e0d2'],
+  'nebula': ['#be3c88', '#19b3b8', '#838686'],
+  'peach blossom': ['#99b898', '#616161', '#fecea8'],
+  '80s after dark': ['#fca6d1', '#99d6ea', '#e1e7ec'],
+  'github': ['#41ce5c', '#788386', '#ccdae6'],
+  'luna': ['#f67599', '#5a3a7e', '#ffe3eb'],
+  'blue dolphin': ['#ffcefb', '#00e4ff', '#82eaff'],
+  'gruvbox dark': ['#d79921', '#665c54', '#ebdbb2'],
+  'purpleish': ['#7a52cc', '#3d3d66', '#7a52cc'],
+  'bliss': ['#f0d3c9', '#665957', '#ffffff'],
+  'catppuccin': ['#cba6f7', '#7f849c', '#cdd6f4'],
+  'wavez': ['#6bde3b', '#1f5e6b', '#e9efe6'],
+  'earthsong': ['#509452', '#f5ae2d', '#e6c7a8'],
+  'monokai': ['#a6e22e', '#e6db74', '#e2e2dc'],
+  'nautilus': ['#ebb723', '#0b4c6c', '#1cbaac'],
+  'norse': ['#2b5f6d', '#505b5e', '#ccc2b1'],
+  'metaverse': ['#d82934', '#5e5e5e', '#e8e8e8'],
+  'rose pine': ['#9ccfd8', '#c4a7e7', '#e0def4'],
+  'dev': ['#23a9d5', '#4b5975', '#ccccb5'],
+  'horizon': ['#c4a88a', '#db886f', '#bbbbbb'],
+  'night runner': ['#feff04', '#5c4a9c', '#e8e8e8'],
+  'sunset': ['#f79777', '#5b578e', '#f4e0c9'],
+  'moonlight': ['#c69f68', '#4b5975', '#ccccb5'],
+  'ishtar': ['#91170c', '#847869', '#fae1c3'],
+  'phantom': ['#7aa2f7', '#414868', '#c0caf5'],
+  'dark note': ['#f2c17b', '#768f95', '#d2dff4'],
+  'drowning': ['#4a6fb5', '#50688c', '#9393a7'],
+  'grape': ['#ff8f00', '#651e56', '#ffffff'],
+  'vscode': ['#007acc', '#4d4d4d', '#d4d4d4'],
+  'metropolis': ['#56c3b7', '#326984', '#e4edf1'],
+  'alduin': ['#dfd7af', '#444444', '#f5f3ed'],
+  'olivia': ['#deaf9d', '#4e3e3e', '#f2efed'],
+  'iceberg dark': ['#84a0c6', '#595e76', '#c6c8d1'],
+  'solarized dark': ['#859900', '#2aa198', '#268bd2'],
+  'dark magic girl': ['#f5b1cc', '#93e8d3', '#a288d9'],
+  'cyberspace': ['#00ce7c', '#9578d3', '#c2fbe1'],
+  'terminal': ['#79a617', '#48494b', '#e7eae0'],
+  'chaos theory': ['#fd77d7', '#676e8a', '#dde5ed'],
+  'joker': ['#99de1e', '#7554a3', '#e9e2f5'],
+  'dots': ['#ffffff', '#676e8a', '#ffffff'],
+  'everblush': ['#8ccf7e', '#838887', '#dadada'],
+  'miami nights': ['#e4609b', '#47bac0', '#ffffff'],
+  'aether': ['#eedaea', '#cf6bdd', '#eedaea'],
+  'pulse': ['#17b8bd', '#53565a', '#e5f4f4'],
+  'anti hero': ['#ffadad', '#ff3d8b', '#f1deef'],
+  'ryujinscales': ['#f17754', '#ffbc90', '#ffe4bc'],
+  'floret': ['#ffdd6d', '#779097', '#e5e5e5'],
+  'terror below': ['#66ac92', '#015c53', '#dceae5'],
+  'tron orange': ['#f0e800', '#ff6600', '#ffffff'],
+  'aurora': ['#00e980', '#245c69', '#ffffff'],
+  'red dragon': ['#ff3a32', '#e2a528', '#4a4d4e'],
+  'dark': ['#eeeeee', '#444444', '#eeeeee'],
+  'rgb': ['#eeeeee', '#444444', '#eeeeee'],
+  'vesper': ['#ffc799', '#99ffe4', '#ffffff'],
+  'voc': ['#e0caac', '#4c1e48', '#eeeae4'],
+  'midnight': ['#60759f', '#394760', '#9fadc6'],
+  'mountain': ['#e7e7e7', '#4c4c4c', '#e7e7e7'],
+  'arch': ['#7ebab5', '#454864', '#f6f5f5'],
+  'incognito': ['#ff9900', '#2f2f2f', '#c6c6c6'],
+  'terra': ['#89c559', '#436029', '#f0edd1'],
+  'trance': ['#e51376', '#3c4c79', '#ffffff'],
+  'solarized osaka': ['#859900', '#2aa198', '#b58900'],
+  'iv spade': ['#b7976a', '#404040', '#d3c2c3'],
+  'hammerhead': ['#4fcdb9', '#213c53', '#e2f1f5'],
+  'fire': ['#b31313', '#683434', '#ffffff'],
+  'stealth': ['#383e42', '#5e676e', '#383e42'],
+  'husqy': ['#c58aff', '#972fff', '#ebd7ff'],
+  'matrix': ['#15ff00', '#006500', '#d1ffcd'],
+  'shadow': ['#eeeeee', '#444444', '#eeeeee']
+};
+
+// Default theme
+const DEFAULT_THEME = 'pastel';
 
 // Elements
 const toggleBtn = document.getElementById('toggleBtn');
@@ -11,15 +202,28 @@ const statusDot = document.getElementById('statusDot');
 const urlList = document.getElementById('urlList');
 const emptyState = document.getElementById('emptyState');
 
+// Theme elements
+const themeToggle = document.getElementById('themeToggle');
+const themePanel = document.getElementById('themePanel');
+const themeClose = document.getElementById('themeClose');
+const themeSearch = document.getElementById('themeSearch');
+const themeGrid = document.getElementById('themeGrid');
+
 // State
 let isActive = false;
 let urls = [];
 let stats = { detected: 0, filtered: 0, total: 0 };
 let isProcessing = false;
+let currentTheme = DEFAULT_THEME;
+let favoriteThemes = new Set();
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Smart URL Monitor popup loading...');
+  console.log('Smart URL Monitor popup with themes loading...');
+  
+  loadThemeSettings();
+  initializeThemes();
+  applyTheme(currentTheme);
   
   setTimeout(loadState, 100);
   
@@ -27,7 +231,171 @@ document.addEventListener('DOMContentLoaded', function() {
   toggleBtn.addEventListener('click', handleToggleClick);
   clearBtn.addEventListener('click', handleClearClick);
   exportBtn.addEventListener('click', handleExportClick);
+  
+  // Theme event listeners
+  themeToggle.addEventListener('click', () => {
+    themePanel.classList.add('active');
+  });
+  
+  themeClose.addEventListener('click', () => {
+    themePanel.classList.remove('active');
+  });
+  
+  themePanel.addEventListener('click', (e) => {
+    if (e.target === themePanel) {
+      themePanel.classList.remove('active');
+    }
+  });
+  
+  themeSearch.addEventListener('input', handleThemeSearch);
 });
+
+// Load theme settings
+function loadThemeSettings() {
+  try {
+    chrome.storage.sync.get(['currentTheme', 'favoriteThemes'], (result) => {
+      currentTheme = result.currentTheme || DEFAULT_THEME;
+      favoriteThemes = new Set(result.favoriteThemes || []);
+    });
+  } catch (error) {
+    console.error('Error loading theme settings:', error);
+  }
+}
+
+// Save theme settings
+function saveThemeSettings() {
+  try {
+    chrome.storage.sync.set({
+      currentTheme: currentTheme,
+      favoriteThemes: Array.from(favoriteThemes)
+    });
+  } catch (error) {
+    console.error('Error saving theme settings:', error);
+  }
+}
+
+// Initialize themes
+function initializeThemes() {
+  const themeNames = Object.keys(THEMES).sort();
+  
+  themeNames.forEach(themeName => {
+    const themeElement = createThemeElement(themeName);
+    themeGrid.appendChild(themeElement);
+  });
+}
+
+// Create theme element
+function createThemeElement(themeName) {
+  const colors = THEMES[themeName];
+  const div = document.createElement('div');
+  div.className = 'theme-button';
+  div.setAttribute('data-theme', themeName);
+  
+  if (themeName === currentTheme) {
+    div.classList.add('active');
+  }
+  
+  div.style.cssText = `
+    background: ${colors[0]};
+    color: ${colors[2]};
+    outline: 0 solid ${colors[2]};
+  `;
+  
+  const isFavorite = favoriteThemes.has(themeName);
+  
+  div.innerHTML = `
+    <div class="favButton ${isFavorite ? 'favorite' : ''}">
+      <i class="fa${isFavorite ? 's' : 'r'} fa-star"></i>
+    </div>
+    <div class="text">${themeName}</div>
+    <div class="themeBubbles" style="background: ${colors[0]}; outline: 0.25rem solid ${colors[0]};">
+      <div class="themeBubble" style="background: ${colors[0]}"></div>
+      <div class="themeBubble" style="background: ${colors[1]}"></div>
+      <div class="themeBubble" style="background: ${colors[2]}"></div>
+    </div>
+  `;
+  
+  // Theme selection handler
+  div.addEventListener('click', (e) => {
+    if (!e.target.closest('.favButton')) {
+      selectTheme(themeName);
+    }
+  });
+  
+  // Favorite toggle handler
+  const favButton = div.querySelector('.favButton');
+  favButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleFavorite(themeName, favButton);
+  });
+  
+  return div;
+}
+
+// Select theme
+function selectTheme(themeName) {
+  // Remove active class from all themes
+  document.querySelectorAll('.theme-button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Add active class to selected theme
+  const selectedElement = document.querySelector(`[data-theme="${themeName}"]`);
+  if (selectedElement) {
+    selectedElement.classList.add('active');
+  }
+  
+  currentTheme = themeName;
+  applyTheme(themeName);
+  saveThemeSettings();
+  
+  showNotification(`Theme "${themeName}" applied successfully!`, 'success');
+}
+
+// Toggle favorite
+function toggleFavorite(themeName, favButton) {
+  const isFavorite = favoriteThemes.has(themeName);
+  
+  if (isFavorite) {
+    favoriteThemes.delete(themeName);
+    favButton.innerHTML = '<i class="far fa-star"></i>';
+    favButton.classList.remove('favorite');
+  } else {
+    favoriteThemes.add(themeName);
+    favButton.innerHTML = '<i class="fas fa-star"></i>';
+    favButton.classList.add('favorite');
+  }
+  
+  saveThemeSettings();
+}
+
+// Apply theme
+function applyTheme(themeName) {
+  const colors = THEMES[themeName] || THEMES[DEFAULT_THEME];
+  const root = document.documentElement;
+  
+  root.style.setProperty('--primary-color', colors[0]);
+  root.style.setProperty('--secondary-color', colors[1]);
+  root.style.setProperty('--accent-color', colors[2]);
+  root.style.setProperty('--text-color', colors[2]);
+  
+  console.log(`Theme "${themeName}" applied:`, colors);
+}
+
+// Handle theme search
+function handleThemeSearch() {
+  const searchTerm = themeSearch.value.toLowerCase();
+  const themeButtons = document.querySelectorAll('.theme-button');
+  
+  themeButtons.forEach(button => {
+    const themeName = button.getAttribute('data-theme').toLowerCase();
+    if (themeName.includes(searchTerm)) {
+      button.style.display = 'flex';
+    } else {
+      button.style.display = 'none';
+    }
+  });
+}
 
 // Load state from background
 function loadState() {
@@ -255,7 +623,7 @@ function showNotification(message, type) {
     let backgroundColor;
     switch(type) {
       case 'success':
-        backgroundColor = '#6d5c6f';
+        backgroundColor = 'var(--accent-color)';
         break;
       case 'error':
         backgroundColor = '#8B5A3C';
@@ -264,7 +632,7 @@ function showNotification(message, type) {
         backgroundColor = '#9A8B73';
         break;
       default:
-        backgroundColor = '#6d5c6f';
+        backgroundColor = 'var(--accent-color)';
     }
     
     notification.style.cssText = `
@@ -274,18 +642,18 @@ function showNotification(message, type) {
       transform: translateX(-50%);
       padding: 10px 16px;
       border-radius: 6px;
-      color: #fbf4b6;
+      color: var(--primary-color);
       font-size: 11px;
-      z-index: 1000;
+      z-index: 1001;
       max-width: 350px;
       text-align: center;
       background: ${backgroundColor};
-      box-shadow: 0 4px 16px rgba(109, 92, 111, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       pointer-events: none;
       font-family: 'Poppins', sans-serif;
       font-weight: 500;
       letter-spacing: 0.5px;
-      border: 1px solid rgba(251, 244, 182, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     `;
     
     notification.textContent = message;
@@ -352,4 +720,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-console.log('Smart URL Monitor popup loaded - Professional monitoring interface active');
+console.log('Smart URL Monitor popup with 140+ themes loaded - Professional monitoring interface active');
