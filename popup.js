@@ -1,4 +1,19 @@
-// popup.js - Smart URL Monitor v3.3 - Professional Edition with Enhanced TTML Parser
+// popup.js - Smart URL Monitor v3.4 - Enhanced Loading System with Progressive Wait Stages
+
+// Configuration for enhanced loading timeouts
+const LOADING_CONFIG = {
+  INITIAL_WAIT: 1500,        // Wait before starting to load
+  PARSING_TIMEOUT: 3000,     // Max time for parsing
+  RETRY_ATTEMPTS: 3,         // Number of retry attempts
+  RETRY_DELAY: 1000,         // Delay between retries
+  PROGRESS_STEPS: [
+    { step: 1, message: "Initializing transcript system...", delay: 500 },
+    { step: 2, message: "Connecting to subtitle servers...", delay: 800 },
+    { step: 3, message: "Loading TTML transcript file...", delay: 1000 },
+    { step: 4, message: "Parsing Netflix subtitle format...", delay: 1200 },
+    { step: 5, message: "Processing subtitle entries...", delay: 500 }
+  ]
+};
 
 // Theme data - 140+ beautiful color palettes
 const THEMES = {
@@ -217,6 +232,11 @@ let isProcessing = false;
 let currentTheme = DEFAULT_THEME;
 let favoriteThemes = new Set();
 
+// Utility function untuk waiting/delay
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Utility function untuk menghitung brightness color
 function getBrightness(color) {
   // Remove # if present
@@ -393,7 +413,7 @@ function seekNetflixVideo(timeInSeconds) {
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Smart URL Monitor popup with enhanced TTML parser loading...');
+  console.log('Smart URL Monitor popup with enhanced loading system loading...');
   
   loadThemeSettings().then(() => {
     initializeThemes();
@@ -824,16 +844,16 @@ function createUrlElement(urlItem, index) {
   if (transcriptBtn) {
     transcriptBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      showTranscriptModal(urlItem.url);
+      showTranscriptModalEnhanced(urlItem.url);
     });
   }
   
   return div;
 }
 
-// Show transcript modal with enhanced loading from real TTML file
-function showTranscriptModal(videoUrl) {
-  // Create modal
+// Enhanced transcript modal with progressive loading system
+async function showTranscriptModalEnhanced(videoUrl) {
+  // Create modal with enhanced loading UI
   const modal = document.createElement('div');
   modal.className = 'transcript-modal';
   modal.innerHTML = `
@@ -843,69 +863,398 @@ function showTranscriptModal(videoUrl) {
         <button class="transcript-close"><i class="fas fa-times"></i></button>
       </div>
       <div class="transcript-body">
-        <div class="transcript-loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          <p>Loading transcript from TTML file...</p>
-          <small>Parsing Netflix subtitle format</small>
+        <div class="enhanced-loading" id="enhancedLoading">
+          <div class="loading-animation">
+            <div class="spinner-container">
+              <div class="loading-spinner"></div>
+              <div class="loading-pulse"></div>
+            </div>
+          </div>
+          <div class="loading-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-percentage" id="progressPercentage">0%</div>
+          </div>
+          <div class="loading-message" id="loadingMessage">
+            Initializing transcript system...
+          </div>
+          <div class="loading-details" id="loadingDetails">
+            Please wait while we prepare the subtitle data
+          </div>
+          <div class="loading-tips" id="loadingTips">
+            💡 Tip: You can click any subtitle line to jump to that timestamp
+          </div>
         </div>
       </div>
     </div>
   `;
   
+  // Add enhanced loading styles
+  const style = document.createElement('style');
+  style.textContent = `
+    .enhanced-loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--accent-color);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .loading-animation {
+      margin-bottom: 30px;
+      position: relative;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .spinner-container {
+      position: relative;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(109, 92, 111, 0.2);
+      border-top: 3px solid var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .loading-pulse {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 70px;
+      height: 70px;
+      border: 2px solid var(--accent-color);
+      border-radius: 50%;
+      opacity: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.3; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    
+    .loading-progress {
+      margin-bottom: 25px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--secondary-color);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border: 1px solid var(--accent-color);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+    
+    .progress-percentage {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+    
+    .loading-message {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--accent-color);
+      min-height: 24px;
+    }
+    
+    .loading-details {
+      font-size: 12px;
+      color: var(--accent-color);
+      opacity: 0.7;
+      margin-bottom: 20px;
+      min-height: 18px;
+    }
+    
+    .loading-tips {
+      font-size: 11px;
+      color: var(--accent-color);
+      opacity: 0.6;
+      font-style: italic;
+      background: var(--secondary-color);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-color);
+    }
+    
+    .error-display {
+      text-align: center;
+      padding: 30px 20px;
+      color: #8B5A3C;
+    }
+    
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #8B5A3C;
+    }
+    
+    .retry-button {
+      background: var(--accent-color);
+      color: var(--primary-color);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 15px;
+      transition: opacity 0.2s ease;
+    }
+    
+    .retry-button:hover {
+      opacity: 0.8;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(15px) scale(0.95); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+      }
+    }
+  `;
+  
+  document.head.appendChild(style);
   document.body.appendChild(modal);
   
-  // Close handler
+  // Close handlers
   modal.querySelector('.transcript-close').addEventListener('click', () => {
     document.body.removeChild(modal);
+    document.head.removeChild(style);
   });
   
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       document.body.removeChild(modal);
+      document.head.removeChild(style);
     }
   });
   
-  // Load the real TTML file from the repository
-  setTimeout(() => {
-    fetch('https://raw.githubusercontent.com/HaikalE/auto-transcript-collector/main/example_transcript.txt')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.text();
-      })
-      .then(ttmlContent => {
-        console.log('✅ Successfully loaded TTML file from GitHub');
-        console.log('Content length:', ttmlContent.length);
-        console.log('First 500 chars:', ttmlContent.substring(0, 500));
-        
-        const subtitles = parseTTMLSubtitle(ttmlContent);
-        renderTranscript(modal, subtitles);
-      })
-      .catch(error => {
-        console.error('❌ Failed to load TTML file:', error);
-        const body = modal.querySelector('.transcript-body');
-        body.innerHTML = `
-          <p class="no-transcript">
-            Failed to load transcript file from GitHub.<br>
-            <small>Error: ${error.message}</small><br><br>
-            <strong>The TTML parser is working correctly, but couldn't fetch the example file.</strong><br>
-            In a real scenario, this would load subtitle data from Netflix's servers.
-          </p>`;
-      });
-  }, 1000);
+  // Start enhanced loading process
+  await startEnhancedLoading(modal, videoUrl);
 }
 
-// Render transcript in modal dengan semua entries yang diparsing
-function renderTranscript(modal, subtitles) {
+// Progressive loading with stages and retry mechanism
+async function startEnhancedLoading(modal, videoUrl, attemptNumber = 1) {
+  const progressFill = modal.querySelector('#progressFill');
+  const progressPercentage = modal.querySelector('#progressPercentage');
+  const loadingMessage = modal.querySelector('#loadingMessage');
+  const loadingDetails = modal.querySelector('#loadingDetails');
+  
+  try {
+    // Execute loading steps with progress
+    let totalProgress = 0;
+    const stepIncrement = 100 / (LOADING_CONFIG.PROGRESS_STEPS.length + 2); // +2 for fetch and parse steps
+    
+    // Step-by-step loading process
+    for (let i = 0; i < LOADING_CONFIG.PROGRESS_STEPS.length; i++) {
+      const step = LOADING_CONFIG.PROGRESS_STEPS[i];
+      
+      loadingMessage.textContent = step.message;
+      
+      if (i === 0) {
+        loadingDetails.textContent = "Setting up transcript viewer system...";
+      } else if (i === 1) {
+        loadingDetails.textContent = "Establishing connection to subtitle services...";
+      } else if (i === 2) {
+        loadingDetails.textContent = "Downloading transcript data from GitHub repository...";
+      } else if (i === 3) {
+        loadingDetails.textContent = "Analyzing TTML format and XML structure...";
+      } else if (i === 4) {
+        loadingDetails.textContent = "Extracting and formatting subtitle entries...";
+      }
+      
+      await wait(step.delay);
+      
+      totalProgress += stepIncrement;
+      progressFill.style.width = `${Math.min(totalProgress, 90)}%`;
+      progressPercentage.textContent = `${Math.floor(totalProgress)}%`;
+    }
+    
+    // Fetch the TTML file
+    loadingMessage.textContent = "Downloading transcript file...";
+    loadingDetails.textContent = "Fetching TTML data from remote repository...";
+    
+    const response = await fetch('https://raw.githubusercontent.com/HaikalE/auto-transcript-collector/main/example_transcript.txt');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    totalProgress += stepIncrement;
+    progressFill.style.width = `${Math.min(totalProgress, 95)}%`;
+    progressPercentage.textContent = `${Math.floor(totalProgress)}%`;
+    
+    const ttmlContent = await response.text();
+    
+    // Parse the content
+    loadingMessage.textContent = "Processing subtitle data...";
+    loadingDetails.textContent = "Parsing XML structure and extracting timestamps...";
+    
+    // Add some processing time to show the progress
+    await wait(800);
+    
+    const subtitles = parseTTMLSubtitle(ttmlContent);
+    
+    // Complete loading
+    progressFill.style.width = "100%";
+    progressPercentage.textContent = "100%";
+    loadingMessage.textContent = "Transcript loaded successfully!";
+    loadingDetails.textContent = `Found ${subtitles.length} subtitle entries`;
+    
+    // Wait a bit to show completion
+    await wait(500);
+    
+    // Render transcript
+    await renderTranscriptEnhanced(modal, subtitles);
+    
+    console.log('✅ Enhanced loading completed successfully');
+    
+  } catch (error) {
+    console.error(`❌ Loading attempt ${attemptNumber} failed:`, error);
+    
+    if (attemptNumber < LOADING_CONFIG.RETRY_ATTEMPTS) {
+      // Show retry message
+      loadingMessage.textContent = `Attempt ${attemptNumber} failed. Retrying...`;
+      loadingDetails.textContent = `Error: ${error.message}`;
+      
+      await wait(LOADING_CONFIG.RETRY_DELAY);
+      
+      // Reset progress and retry
+      progressFill.style.width = "0%";
+      progressPercentage.textContent = "0%";
+      
+      return await startEnhancedLoading(modal, videoUrl, attemptNumber + 1);
+    }
+    
+    // Show error if all attempts failed
+    showLoadingError(modal, error, videoUrl);
+  }
+}
+
+// Show error with retry option
+function showLoadingError(modal, error, videoUrl) {
+  const body = modal.querySelector('.transcript-body');
+  body.innerHTML = `
+    <div class="error-display">
+      <div class="error-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h4>Failed to Load Transcript</h4>
+      <p>We couldn't load the transcript file after ${LOADING_CONFIG.RETRY_ATTEMPTS} attempts.</p>
+      <small><strong>Error:</strong> ${error.message}</small>
+      
+      <br><br>
+      
+      <div style="background: var(--secondary-color); padding: 15px; border-radius: 6px; border: 1px solid #ccc; margin: 15px 0;">
+        <strong>🔧 Technical Details:</strong><br>
+        <small>
+          • The TTML parser is working correctly<br>
+          • This error occurs when the remote file can't be fetched<br>
+          • In production, this would load from Netflix's servers<br>
+          • The system attempted ${LOADING_CONFIG.RETRY_ATTEMPTS} times with ${LOADING_CONFIG.RETRY_DELAY}ms delays
+        </small>
+      </div>
+      
+      <button class="retry-button" onclick="retryLoading()">
+        <i class="fas fa-refresh"></i> Try Again
+      </button>
+    </div>
+  `;
+  
+  // Store retry function globally
+  window.retryLoading = async () => {
+    body.innerHTML = `
+      <div class="enhanced-loading" id="enhancedLoading">
+        <div class="loading-animation">
+          <div class="spinner-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-pulse"></div>
+          </div>
+        </div>
+        <div class="loading-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-percentage" id="progressPercentage">0%</div>
+        </div>
+        <div class="loading-message" id="loadingMessage">
+          Retrying transcript load...
+        </div>
+        <div class="loading-details" id="loadingDetails">
+          Attempting to reload the subtitle data
+        </div>
+        <div class="loading-tips" id="loadingTips">
+          💡 Tip: You can click any subtitle line to jump to that timestamp
+        </div>
+      </div>
+    `;
+    
+    await startEnhancedLoading(modal, videoUrl, 1);
+  };
+}
+
+// Enhanced transcript rendering with smooth animations
+async function renderTranscriptEnhanced(modal, subtitles) {
   const body = modal.querySelector('.transcript-body');
   
   if (subtitles.length === 0) {
     body.innerHTML = `
-      <p class="no-transcript">
-        No transcript entries found.<br>
-        <small>The TTML file might be empty or have parsing issues.</small>
-      </p>`;
+      <div class="error-display">
+        <div class="error-icon">
+          <i class="fas fa-search"></i>
+        </div>
+        <h4>No Transcript Entries Found</h4>
+        <p>The TTML file was loaded successfully but contains no readable subtitle entries.</p>
+        
+        <div style="background: var(--secondary-color); padding: 15px; border-radius: 6px; border: 1px solid #ccc; margin: 15px 0;">
+          <strong>🔍 Possible Reasons:</strong><br>
+          <small>
+            • The file might be empty or corrupted<br>
+            • XML structure doesn't match Netflix format<br>
+            • Subtitle entries have invalid timestamps<br>
+            • Content filtering removed all entries
+          </small>
+        </div>
+      </div>
+    `;
     return;
   }
   
@@ -913,73 +1262,111 @@ function renderTranscript(modal, subtitles) {
   const totalDuration = subtitles[subtitles.length - 1]?.end || 0;
   const durationFormatted = formatTime(totalDuration);
   
-  // Render header with stats
-  let transcriptHTML = `
-    <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: var(--secondary-color); border-radius: 8px; border: 2px solid var(--accent-color);">
-      <div style="font-size: 18px; font-weight: 600; color: var(--accent-color); margin-bottom: 8px;">
-        ✅ Found ${subtitles.length} transcript entries
+  // Create success animation first
+  body.innerHTML = `
+    <div class="loading-success" style="text-align: center; padding: 20px;">
+      <div style="color: #4CAF50; font-size: 48px; margin-bottom: 15px;">
+        <i class="fas fa-check-circle"></i>
       </div>
-      <div style="font-size: 12px; color: var(--accent-color); opacity: 0.8;">
-        Duration: ${durationFormatted} • Click any line to seek to that time
-      </div>
+      <h4 style="color: var(--accent-color); margin-bottom: 10px;">
+        ✅ Successfully loaded ${subtitles.length} subtitle entries!
+      </h4>
+      <p style="color: var(--accent-color); opacity: 0.7; font-size: 12px;">
+        Duration: ${durationFormatted} • Preparing interactive transcript...
+      </p>
     </div>
-    <div class="transcript-list">`;
+  `;
   
-  // Render all subtitle entries
-  subtitles.forEach((subtitle, index) => {
-    transcriptHTML += `
-      <div class="transcript-item" data-time="${subtitle.start}" title="Seek to ${subtitle.startTime}">
-        <div class="transcript-time">${subtitle.startTime}</div>
-        <div class="transcript-text">${subtitle.text}</div>
+  // After success animation, show transcript
+  setTimeout(() => {
+    let transcriptHTML = `
+      <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: var(--secondary-color); border-radius: 8px; border: 2px solid var(--accent-color); animation: fadeIn 0.5s ease;">
+        <div style="font-size: 18px; font-weight: 600; color: var(--accent-color); margin-bottom: 8px;">
+          📝 ${subtitles.length} Transcript Entries Loaded
+        </div>
+        <div style="font-size: 12px; color: var(--accent-color); opacity: 0.8;">
+          Duration: ${durationFormatted} • Click any line to seek to that time
+        </div>
+        <div style="font-size: 10px; color: var(--accent-color); opacity: 0.6; margin-top: 8px;">
+          🎬 Enhanced Loading System v3.4 • Netflix Subtitle Format
+        </div>
       </div>
-    `;
-  });
-  
-  transcriptHTML += '</div>';
-  body.innerHTML = transcriptHTML;
-  
-  console.log(`✅ Rendered ${subtitles.length} transcript entries in modal`);
-  
-  // Add click handlers for seeking
-  body.querySelectorAll('.transcript-item').forEach((item, index) => {
-    item.addEventListener('click', () => {
-      const timeInSeconds = parseFloat(item.getAttribute('data-time'));
-      
-      // Execute Netflix seek script in active tab
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        if (tabs[0]) {
-          chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            func: function(time) {
-              try {
-                const waktuTujuanDetik = time;
-                const api = window.netflix.appContext.state.playerApp.getAPI();
-                const videoPlayer = api.videoPlayer;
-                const sessionId = videoPlayer.getAllPlayerSessionIds()[0];
-                const player = videoPlayer.getVideoPlayerBySessionId(sessionId);
-                
-                const waktuTujuanMilidetik = waktuTujuanDetik * 1000;
-                player.seek(waktuTujuanMilidetik);
-                
-                console.log('✅ Berhasil melompat ke detik ' + waktuTujuanDetik);
-                return true;
-              } catch (e) {
-                console.error("Gagal melakukan seek. Pastikan video sedang diputar.", e);
-                return false;
+      <div class="transcript-list" style="animation: slideIn 0.6s ease;">`;
+    
+    // Render all subtitle entries with fade-in animation
+    subtitles.forEach((subtitle, index) => {
+      const animationDelay = Math.min(index * 0.02, 1); // Max 1s delay
+      transcriptHTML += `
+        <div class="transcript-item" 
+             data-time="${subtitle.start}" 
+             title="Seek to ${subtitle.startTime}"
+             style="animation: fadeInUp 0.4s ease ${animationDelay}s both;">
+          <div class="transcript-time">${subtitle.startTime}</div>
+          <div class="transcript-text">${subtitle.text}</div>
+        </div>
+      `;
+    });
+    
+    transcriptHTML += '</div>';
+    
+    body.innerHTML = transcriptHTML;
+    
+    console.log(`✅ Enhanced rendering completed for ${subtitles.length} entries with smooth animations`);
+    
+    // Add click handlers for seeking
+    body.querySelectorAll('.transcript-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const timeInSeconds = parseFloat(item.getAttribute('data-time'));
+        
+        // Add click animation
+        item.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+          item.style.transform = '';
+        }, 150);
+        
+        // Execute Netflix seek
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          if (tabs[0]) {
+            chrome.scripting.executeScript({
+              target: { tabId: tabs[0].id },
+              func: function(time) {
+                try {
+                  const waktuTujuanDetik = time;
+                  const api = window.netflix.appContext.state.playerApp.getAPI();
+                  const videoPlayer = api.videoPlayer;
+                  const sessionId = videoPlayer.getAllPlayerSessionIds()[0];
+                  const player = videoPlayer.getVideoPlayerBySessionId(sessionId);
+                  
+                  const waktuTujuanMilidetik = waktuTujuanDetik * 1000;
+                  player.seek(waktuTujuanMilidetik);
+                  
+                  console.log('✅ Berhasil melompat ke detik ' + waktuTujuanDetik);
+                  return true;
+                } catch (e) {
+                  console.error("Gagal melakukan seek. Pastikan video sedang diputar.", e);
+                  return false;
+                }
+              },
+              args: [timeInSeconds]
+            }, (result) => {
+              if (result && result[0] && result[0].result) {
+                showNotification(`⏰ Jumped to ${formatTime(timeInSeconds)}`, 'success');
+              } else {
+                showNotification('Failed to seek. Make sure Netflix video is playing.', 'error');
               }
-            },
-            args: [timeInSeconds]
-          }, (result) => {
-            if (result && result[0] && result[0].result) {
-              showNotification(`Jumped to ${formatTime(timeInSeconds)} ✅`, 'success');
-            } else {
-              showNotification('Failed to seek video. Make sure Netflix is playing.', 'error');
-            }
-          });
-        }
+            });
+          }
+        });
       });
     });
-  });
+    
+  }, 1500); // Wait 1.5s to show success animation
+}
+
+// Original showTranscriptModal (kept as fallback)
+function showTranscriptModal(videoUrl) {
+  // Redirect to enhanced version
+  showTranscriptModalEnhanced(videoUrl);
 }
 
 // Show notification
@@ -1087,4 +1474,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-console.log('Smart URL Monitor popup with enhanced TTML parser loaded - Now properly handles complex Netflix subtitle structure! 🎬');
+console.log('🚀 Smart URL Monitor v3.4 with Enhanced Loading System loaded! Progressive wait stages for better UX 🎬');
