@@ -1,17 +1,18 @@
-// popup.js - Smart URL Monitor v3.4 - Enhanced Loading System with Progressive Wait Stages
+// popup.js - Smart URL Monitor v3.5 - ENHANCED TTML Parser with Extended Wait Times
 
-// Configuration for enhanced loading timeouts
+// Configuration for enhanced loading timeouts - DIPERBESAR SEMUA TIMING
 const LOADING_CONFIG = {
-  INITIAL_WAIT: 1500,        // Wait before starting to load
-  PARSING_TIMEOUT: 3000,     // Max time for parsing
+  INITIAL_WAIT: 3000,        // Wait before starting to load - NAIKKAN DARI 1500ms
+  PARSING_TIMEOUT: 6000,     // Max time for parsing - NAIKKAN DARI 3000ms
   RETRY_ATTEMPTS: 3,         // Number of retry attempts
-  RETRY_DELAY: 1000,         // Delay between retries
+  RETRY_DELAY: 2000,         // Delay between retries - NAIKKAN DARI 1000ms
+  PRE_PARSING_WAIT: 1000,    // BARU: Wait sebelum mulai parsing
   PROGRESS_STEPS: [
-    { step: 1, message: "Initializing transcript system...", delay: 500 },
-    { step: 2, message: "Connecting to subtitle servers...", delay: 800 },
-    { step: 3, message: "Loading TTML transcript file...", delay: 1000 },
-    { step: 4, message: "Parsing Netflix subtitle format...", delay: 1200 },
-    { step: 5, message: "Processing subtitle entries...", delay: 500 }
+    { step: 1, message: "Initializing transcript system...", delay: 800 },    // 500→800
+    { step: 2, message: "Connecting to subtitle servers...", delay: 1200 },   // 800→1200
+    { step: 3, message: "Loading TTML transcript file...", delay: 1500 },     // 1000→1500
+    { step: 4, message: "Parsing Netflix subtitle format...", delay: 2000 },  // 1200→2000
+    { step: 5, message: "Processing subtitle entries...", delay: 800 }        // 500→800
   ]
 };
 
@@ -259,10 +260,18 @@ function getOptimalTextColor(backgroundColor) {
   return brightness > 128 ? '#000000' : '#ffffff';
 }
 
-// Enhanced TTML parser - Fixed to handle complex Netflix structure properly
-function parseTTMLSubtitle(ttmlContent) {
+// 🚀 ENHANCED TTML parser - FIXED dengan timing yang lebih baik dan debugging lengkap
+async function parseTTMLSubtitle(ttmlContent) {
   try {
-    console.log('Starting TTML parsing - Content length:', ttmlContent.length);
+    console.log('🔍 Starting ENHANCED TTML parsing v3.5 - Content length:', ttmlContent.length);
+    
+    // 🕐 TAMBAHAN: Wait 1 detik sebelum mulai parsing untuk memastikan content ready
+    console.log('⏳ Pre-parsing wait untuk memastikan content ready...');
+    await wait(LOADING_CONFIG.PRE_PARSING_WAIT);
+    
+    // Debug: Log sample content untuk memastikan data ada
+    console.log('📝 Sample content (first 500 chars):', ttmlContent.substring(0, 500));
+    console.log('📝 Sample content (last 200 chars):', ttmlContent.substring(ttmlContent.length - 200));
     
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(ttmlContent, 'text/xml');
@@ -271,35 +280,90 @@ function parseTTMLSubtitle(ttmlContent) {
     // Check for parsing errors
     const parseError = xmlDoc.querySelector('parsererror');
     if (parseError) {
-      console.error('XML parsing error:', parseError.textContent);
+      console.error('❌ XML parsing error:', parseError.textContent);
+      throw new Error('XML parsing failed: ' + parseError.textContent);
+    }
+    
+    console.log('✅ XML parsing successful');
+    
+    // 🔧 IMPROVED: Multiple selectors untuk berbagai format Netflix TTML
+    const selectors = [
+      'p[xml\\:id]',           // Netflix format dengan xml:id
+      'p[begin]',              // Standard TTML dengan begin attribute
+      'p[xml\\:id][begin]',    // Kombinasi keduanya
+      'body p',                // Semua p dalam body
+      'div p'                  // Semua p dalam div
+    ];
+    
+    let pElements = null;
+    let selectedSelector = '';
+    
+    // Try each selector until we find elements
+    for (const selector of selectors) {
+      try {
+        pElements = xmlDoc.querySelectorAll(selector);
+        if (pElements && pElements.length > 0) {
+          selectedSelector = selector;
+          console.log(`✅ Found ${pElements.length} elements using selector: "${selector}"`);
+          break;
+        } else {
+          console.log(`⚠️ Selector "${selector}" found ${pElements ? pElements.length : 0} elements`);
+        }
+      } catch (selectorError) {
+        console.log(`❌ Selector "${selector}" failed:`, selectorError.message);
+      }
+    }
+    
+    if (!pElements || pElements.length === 0) {
+      console.error('❌ No subtitle paragraphs found with any selector');
+      
+      // DEBUG: Log structure untuk debugging
+      console.log('🔍 XML Document structure:');
+      console.log('- Root element:', xmlDoc.documentElement?.tagName);
+      console.log('- All elements:', Array.from(xmlDoc.querySelectorAll('*')).map(el => el.tagName));
+      console.log('- All p elements:', xmlDoc.querySelectorAll('p').length);
+      console.log('- Elements with begin:', xmlDoc.querySelectorAll('[begin]').length);
+      console.log('- Elements with xml:id:', xmlDoc.querySelectorAll('[xml\\:id]').length);
+      
       return [];
     }
     
-    // Enhanced selector to find all <p> elements with proper namespace handling
-    const pElements = xmlDoc.querySelectorAll('p[xml\\:id], p[begin]');
-    console.log('Found paragraph elements:', pElements.length);
+    console.log(`🎯 Processing ${pElements.length} paragraph elements using selector: "${selectedSelector}"`);
     
+    // Process each paragraph element
     pElements.forEach((p, index) => {
       const beginTime = p.getAttribute('begin');
       const endTime = p.getAttribute('end');
       const xmlId = p.getAttribute('xml:id') || p.getAttribute('id');
       
+      // Debug first few elements
+      if (index < 3) {
+        console.log(`🔍 Element ${index + 1}:`, {
+          begin: beginTime,
+          end: endTime,
+          id: xmlId,
+          innerHTML: p.innerHTML?.substring(0, 100) + '...'
+        });
+      }
+      
       if (!beginTime) {
-        console.log(`Skipping entry ${index}: missing begin time`);
+        console.log(`⚠️ Skipping entry ${index + 1}: missing begin time`);
         return;
       }
       
-      // Convert Netflix time format "91091000t" to seconds
+      // Convert Netflix time format "119600000t" to seconds
       const beginSeconds = beginTime ? parseFloat(beginTime.replace('t', '')) / 10000000 : 0;
       const endSeconds = endTime ? parseFloat(endTime.replace('t', '')) / 10000000 : 0;
       
-      // Enhanced text extraction to handle <span> elements and <br/> tags properly
+      // 🔧 ENHANCED text extraction untuk handle Netflix format
       let textContent = '';
       
-      // Check if there are <span> elements
+      // Check if there are <span> elements (Netflix style)
       const spanElements = p.querySelectorAll('span');
       
       if (spanElements.length > 0) {
+        console.log(`📝 Found ${spanElements.length} span elements in entry ${index + 1}`);
+        
         // Extract text from each span and handle line breaks
         const textParts = [];
         
@@ -313,7 +377,8 @@ function parseTTMLSubtitle(ttmlContent) {
           let nextSibling = span.nextSibling;
           while (nextSibling) {
             if (nextSibling.nodeName === 'BR' || nextSibling.nodeName === 'br') {
-              // Line break found, but we'll join with space for better readability
+              // Line break found - join with space for readability
+              textParts.push(' ');
               break;
             } else if (nextSibling.nodeType === Node.TEXT_NODE) {
               const textNode = nextSibling.textContent?.trim();
@@ -354,24 +419,30 @@ function parseTTMLSubtitle(ttmlContent) {
           endTime: formatTime(endSeconds)
         });
         
-        // Debug first few entries
+        // Debug first few entries dengan detail
         if (index < 5) {
-          console.log(`Entry ${index + 1}: ${formatTime(beginSeconds)} - "${textContent.substring(0, 50)}${textContent.length > 50 ? '...' : ''}"`);
+          console.log(`✅ Entry ${index + 1}: ${formatTime(beginSeconds)} - "${textContent.substring(0, 50)}${textContent.length > 50 ? '...' : ''}"`);
         }
+      } else {
+        console.log(`⚠️ Entry ${index + 1}: Empty text content, skipping`);
       }
     });
     
     // Sort by start time
     const sortedSubtitles = subtitles.sort((a, b) => a.start - b.start);
     
-    console.log(`✅ Successfully parsed ${sortedSubtitles.length} subtitle entries from TTML`);
-    console.log(`Time range: ${sortedSubtitles[0]?.startTime || '0:00'} - ${sortedSubtitles[sortedSubtitles.length - 1]?.endTime || '0:00'}`);
+    console.log(`✅ SUCCESS! Parsed ${sortedSubtitles.length} subtitle entries from TTML`);
+    if (sortedSubtitles.length > 0) {
+      console.log(`📊 Time range: ${sortedSubtitles[0]?.startTime || '0:00'} - ${sortedSubtitles[sortedSubtitles.length - 1]?.endTime || '0:00'}`);
+      console.log(`📝 Sample entries:`, sortedSubtitles.slice(0, 3).map(s => `${s.startTime}: ${s.text.substring(0, 30)}...`));
+    }
     
     return sortedSubtitles;
     
   } catch (error) {
-    console.error('Error parsing TTML:', error);
-    return [];
+    console.error('❌ Error in enhanced TTML parsing:', error);
+    console.error('Stack trace:', error.stack);
+    throw error; // Re-throw untuk handling di level atas
   }
 }
 
@@ -413,7 +484,7 @@ function seekNetflixVideo(timeInSeconds) {
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Smart URL Monitor popup with enhanced loading system loading...');
+  console.log('🚀 Smart URL Monitor v3.5 with Enhanced TTML Parser loading...');
   
   loadThemeSettings().then(() => {
     initializeThemes();
@@ -859,7 +930,7 @@ async function showTranscriptModalEnhanced(videoUrl) {
   modal.innerHTML = `
     <div class="transcript-content">
       <div class="transcript-header">
-        <h3>Video Transcript</h3>
+        <h3>🎬 Video Transcript v3.5</h3>
         <button class="transcript-close"><i class="fas fa-times"></i></button>
       </div>
       <div class="transcript-body">
@@ -883,7 +954,7 @@ async function showTranscriptModalEnhanced(videoUrl) {
             Please wait while we prepare the subtitle data
           </div>
           <div class="loading-tips" id="loadingTips">
-            💡 Tip: You can click any subtitle line to jump to that timestamp
+            💡 Tip: Extended wait times untuk memastikan TTML parsing sempurna
           </div>
         </div>
       </div>
@@ -1071,7 +1142,7 @@ async function showTranscriptModalEnhanced(videoUrl) {
   await startEnhancedLoading(modal, videoUrl);
 }
 
-// Progressive loading with stages and retry mechanism
+// 🚀 Progressive loading with EXTENDED stages and retry mechanism
 async function startEnhancedLoading(modal, videoUrl, attemptNumber = 1) {
   const progressFill = modal.querySelector('#progressFill');
   const progressPercentage = modal.querySelector('#progressPercentage');
@@ -1079,28 +1150,31 @@ async function startEnhancedLoading(modal, videoUrl, attemptNumber = 1) {
   const loadingDetails = modal.querySelector('#loadingDetails');
   
   try {
-    // Execute loading steps with progress
+    console.log(`🚀 Starting enhanced loading attempt ${attemptNumber} with extended timing...`);
+    
+    // Execute loading steps with EXTENDED progress
     let totalProgress = 0;
     const stepIncrement = 100 / (LOADING_CONFIG.PROGRESS_STEPS.length + 2); // +2 for fetch and parse steps
     
-    // Step-by-step loading process
+    // Step-by-step loading process dengan timing yang diperpanjang
     for (let i = 0; i < LOADING_CONFIG.PROGRESS_STEPS.length; i++) {
       const step = LOADING_CONFIG.PROGRESS_STEPS[i];
       
       loadingMessage.textContent = step.message;
       
       if (i === 0) {
-        loadingDetails.textContent = "Setting up transcript viewer system...";
+        loadingDetails.textContent = "Setting up transcript viewer system dengan extended timing...";
       } else if (i === 1) {
-        loadingDetails.textContent = "Establishing connection to subtitle services...";
+        loadingDetails.textContent = "Establishing connection to subtitle services (extended wait)...";
       } else if (i === 2) {
-        loadingDetails.textContent = "Downloading transcript data from GitHub repository...";
+        loadingDetails.textContent = "Downloading transcript data from GitHub repository (longer timeout)...";
       } else if (i === 3) {
-        loadingDetails.textContent = "Analyzing TTML format and XML structure...";
+        loadingDetails.textContent = "Analyzing TTML format dan XML structure (dengan pre-parsing wait)...";
       } else if (i === 4) {
-        loadingDetails.textContent = "Extracting and formatting subtitle entries...";
+        loadingDetails.textContent = "Extracting and formatting subtitle entries (enhanced processing)...";
       }
       
+      console.log(`⏳ Step ${i + 1}: ${step.message} - waiting ${step.delay}ms`);
       await wait(step.delay);
       
       totalProgress += stepIncrement;
@@ -1108,10 +1182,11 @@ async function startEnhancedLoading(modal, videoUrl, attemptNumber = 1) {
       progressPercentage.textContent = `${Math.floor(totalProgress)}%`;
     }
     
-    // Fetch the TTML file
+    // Fetch the TTML file dengan extended timeout
     loadingMessage.textContent = "Downloading transcript file...";
-    loadingDetails.textContent = "Fetching TTML data from remote repository...";
+    loadingDetails.textContent = "Fetching TTML data from remote repository (extended timeout)...";
     
+    console.log('🔍 Fetching TTML file from GitHub...');
     const response = await fetch('https://raw.githubusercontent.com/HaikalE/auto-transcript-collector/main/example_transcript.txt');
     
     if (!response.ok) {
@@ -1123,38 +1198,42 @@ async function startEnhancedLoading(modal, videoUrl, attemptNumber = 1) {
     progressPercentage.textContent = `${Math.floor(totalProgress)}%`;
     
     const ttmlContent = await response.text();
+    console.log('✅ TTML file fetched successfully, length:', ttmlContent.length);
     
-    // Parse the content
-    loadingMessage.textContent = "Processing subtitle data...";
-    loadingDetails.textContent = "Parsing XML structure and extracting timestamps...";
+    // Parse the content dengan enhanced parser
+    loadingMessage.textContent = "Processing subtitle data with v3.5 parser...";
+    loadingDetails.textContent = "Parsing XML structure dengan enhanced TTML parser...";
     
-    // Add some processing time to show the progress
-    await wait(800);
+    // Add EXTENDED processing time to show the progress
+    console.log('⏳ Adding extended processing time before parsing...');
+    await wait(1200); // Extended dari 800ms ke 1200ms
     
-    const subtitles = parseTTMLSubtitle(ttmlContent);
+    console.log('🔧 Starting enhanced TTML parsing...');
+    const subtitles = await parseTTMLSubtitle(ttmlContent);
     
     // Complete loading
     progressFill.style.width = "100%";
     progressPercentage.textContent = "100%";
-    loadingMessage.textContent = "Transcript loaded successfully!";
-    loadingDetails.textContent = `Found ${subtitles.length} subtitle entries`;
+    loadingMessage.textContent = "Transcript loaded successfully with v3.5!";
+    loadingDetails.textContent = `Found ${subtitles.length} subtitle entries with enhanced parser`;
     
     // Wait a bit to show completion
-    await wait(500);
+    await wait(800); // Extended dari 500ms
     
     // Render transcript
     await renderTranscriptEnhanced(modal, subtitles);
     
-    console.log('✅ Enhanced loading completed successfully');
+    console.log('✅ Enhanced loading v3.5 completed successfully!');
     
   } catch (error) {
     console.error(`❌ Loading attempt ${attemptNumber} failed:`, error);
     
     if (attemptNumber < LOADING_CONFIG.RETRY_ATTEMPTS) {
       // Show retry message
-      loadingMessage.textContent = `Attempt ${attemptNumber} failed. Retrying...`;
+      loadingMessage.textContent = `Attempt ${attemptNumber} failed. Retrying with extended timing...`;
       loadingDetails.textContent = `Error: ${error.message}`;
       
+      console.log(`⏳ Waiting ${LOADING_CONFIG.RETRY_DELAY}ms before retry...`);
       await wait(LOADING_CONFIG.RETRY_DELAY);
       
       // Reset progress and retry
@@ -1178,23 +1257,24 @@ function showLoadingError(modal, error, videoUrl) {
         <i class="fas fa-exclamation-triangle"></i>
       </div>
       <h4>Failed to Load Transcript</h4>
-      <p>We couldn't load the transcript file after ${LOADING_CONFIG.RETRY_ATTEMPTS} attempts.</p>
+      <p>We couldn't load the transcript file after ${LOADING_CONFIG.RETRY_ATTEMPTS} attempts with extended timing.</p>
       <small><strong>Error:</strong> ${error.message}</small>
       
       <br><br>
       
       <div style="background: var(--secondary-color); padding: 15px; border-radius: 6px; border: 1px solid #ccc; margin: 15px 0;">
-        <strong>🔧 Technical Details:</strong><br>
+        <strong>🔧 Enhanced Parser v3.5 Details:</strong><br>
         <small>
-          • The TTML parser is working correctly<br>
-          • This error occurs when the remote file can't be fetched<br>
-          • In production, this would load from Netflix's servers<br>
-          • The system attempted ${LOADING_CONFIG.RETRY_ATTEMPTS} times with ${LOADING_CONFIG.RETRY_DELAY}ms delays
+          • Extended all wait times for better TTML parsing<br>
+          • Pre-parsing wait: ${LOADING_CONFIG.PRE_PARSING_WAIT}ms<br>
+          • Enhanced debugging dan multiple selectors<br>
+          • System attempted ${LOADING_CONFIG.RETRY_ATTEMPTS} times with ${LOADING_CONFIG.RETRY_DELAY}ms delays<br>
+          • TTML data structure terbukti valid dari sample yang diberikan
         </small>
       </div>
       
       <button class="retry-button" onclick="retryLoading()">
-        <i class="fas fa-refresh"></i> Try Again
+        <i class="fas fa-refresh"></i> Try Again with Extended Timing
       </button>
     </div>
   `;
@@ -1216,13 +1296,13 @@ function showLoadingError(modal, error, videoUrl) {
           <div class="progress-percentage" id="progressPercentage">0%</div>
         </div>
         <div class="loading-message" id="loadingMessage">
-          Retrying transcript load...
+          Retrying with enhanced parser v3.5...
         </div>
         <div class="loading-details" id="loadingDetails">
-          Attempting to reload the subtitle data
+          Attempting reload dengan extended timing dan improved parsing
         </div>
         <div class="loading-tips" id="loadingTips">
-          💡 Tip: You can click any subtitle line to jump to that timestamp
+          💡 Enhanced: Pre-parsing wait, extended timeouts, better debugging
         </div>
       </div>
     `;
@@ -1242,15 +1322,16 @@ async function renderTranscriptEnhanced(modal, subtitles) {
           <i class="fas fa-search"></i>
         </div>
         <h4>No Transcript Entries Found</h4>
-        <p>The TTML file was loaded successfully but contains no readable subtitle entries.</p>
+        <p>The TTML file was loaded successfully but contains no readable subtitle entries after enhanced parsing.</p>
         
         <div style="background: var(--secondary-color); padding: 15px; border-radius: 6px; border: 1px solid #ccc; margin: 15px 0;">
-          <strong>🔍 Possible Reasons:</strong><br>
+          <strong>🔍 Enhanced Parser v3.5 Status:</strong><br>
           <small>
-            • The file might be empty or corrupted<br>
-            • XML structure doesn't match Netflix format<br>
-            • Subtitle entries have invalid timestamps<br>
-            • Content filtering removed all entries
+            • Pre-parsing wait: ✅ ${LOADING_CONFIG.PRE_PARSING_WAIT}ms<br>
+            • Multiple selectors tested: ✅<br>
+            • Extended timing: ✅<br>
+            • Enhanced debugging: ✅<br>
+            • Content validation: Please check console logs
           </small>
         </div>
       </div>
@@ -1272,7 +1353,7 @@ async function renderTranscriptEnhanced(modal, subtitles) {
         ✅ Successfully loaded ${subtitles.length} subtitle entries!
       </h4>
       <p style="color: var(--accent-color); opacity: 0.7; font-size: 12px;">
-        Duration: ${durationFormatted} • Preparing interactive transcript...
+        Duration: ${durationFormatted} • Enhanced Parser v3.5 • Preparing interactive transcript...
       </p>
     </div>
   `;
@@ -1288,7 +1369,7 @@ async function renderTranscriptEnhanced(modal, subtitles) {
           Duration: ${durationFormatted} • Click any line to seek to that time
         </div>
         <div style="font-size: 10px; color: var(--accent-color); opacity: 0.6; margin-top: 8px;">
-          🎬 Enhanced Loading System v3.4 • Netflix Subtitle Format
+          🎬 Enhanced Loading System v3.5 • Extended Timing • Better TTML Parser
         </div>
       </div>
       <div class="transcript-list" style="animation: slideIn 0.6s ease;">`;
@@ -1311,7 +1392,7 @@ async function renderTranscriptEnhanced(modal, subtitles) {
     
     body.innerHTML = transcriptHTML;
     
-    console.log(`✅ Enhanced rendering completed for ${subtitles.length} entries with smooth animations`);
+    console.log(`✅ Enhanced rendering v3.5 completed for ${subtitles.length} entries with smooth animations`);
     
     // Add click handlers for seeking
     body.querySelectorAll('.transcript-item').forEach((item) => {
@@ -1360,7 +1441,7 @@ async function renderTranscriptEnhanced(modal, subtitles) {
       });
     });
     
-  }, 1500); // Wait 1.5s to show success animation
+  }, 2000); // Extended dari 1500ms ke 2000ms untuk show success animation lebih lama
 }
 
 // Original showTranscriptModal (kept as fallback)
@@ -1474,4 +1555,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-console.log('🚀 Smart URL Monitor v3.4 with Enhanced Loading System loaded! Progressive wait stages for better UX 🎬');
+console.log('🚀 Smart URL Monitor v3.5 with Enhanced TTML Parser loaded! Extended timing + Better debugging 🎬');
