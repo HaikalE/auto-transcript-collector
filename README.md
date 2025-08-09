@@ -17,6 +17,7 @@
   <img width="300" src="https://github.com/user-attachments/assets/35db5eee-907e-4a19-b662-e1c654fd51d8" alt="Main Interface">
   <img width="300" src="https://github.com/user-attachments/assets/63948a2c-d306-43d0-a297-b6e7845fa766" alt="Feature Dashboard">
   <img width="300" src="https://github.com/user-attachments/assets/d3123ebb-9092-4a27-98bc-21845a3ab921" alt="Settings Panel">
+  <img width="300" src="https://github.com/user-attachments/assets/423469af-847a-4be9-843b-a1d32742de9b" alt="Additional Feature">
 </div>
 
 ## ✨ Features
