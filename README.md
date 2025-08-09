@@ -14,11 +14,25 @@
 ## 📸 Screenshots
 
 <div align="center">
-  <img width="300" src="https://github.com/user-attachments/assets/35db5eee-907e-4a19-b662-e1c654fd51d8" alt="Main Interface">
-  <img width="300" src="https://github.com/user-attachments/assets/63948a2c-d306-43d0-a297-b6e7845fa766" alt="Feature Dashboard">
-  <img width="300" src="https://github.com/user-attachments/assets/892fa23b-04ed-4d60-8159-5c26b970abc1" alt="Settings Panel"/>
-
-  <img width="300" src="https://github.com/user-attachments/assets/423469af-847a-4be9-843b-a1d32742de9b" alt="Additional Feature">
+  <div>
+    <h4>📊 Main Dashboard</h4>
+    <img width="300" src="https://github.com/user-attachments/assets/35db5eee-907e-4a19-b662-e1c654fd51d8" alt="Main Dashboard - URL monitoring with statistics and filtering system">
+  </div>
+  
+  <div>
+    <h4>📺 Netflix Transcript Viewer</h4>
+    <img width="300" src="https://github.com/user-attachments/assets/63948a2c-d306-43d0-a297-b6e7845fa766" alt="Netflix Transcript Viewer - Clickable timestamps with live highlighting">
+  </div>
+  
+  <div>
+    <h4>🎨 Theme Selector</h4>
+    <img width="300" src="https://github.com/user-attachments/assets/d3123ebb-9092-4a27-98bc-21845a3ab921" alt="Theme Selector - 140+ customizable color themes with search">
+  </div>
+  
+  <div>
+    <h4>🌈 Live Theme Preview</h4>
+    <img width="300" src="https://github.com/user-attachments/assets/423469af-847a-4be9-843b-a1d32742de9b" alt="Live Theme Preview - Real-time theme switching and multiple windows">
+  </div>
 </div>
 
 ## ✨ Features
