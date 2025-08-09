@@ -18,12 +18,12 @@ Advanced URL monitoring extension with Netflix transcript viewer and 140+ custom
   </div>
   
   <div>
-    <h3>Feature Dashboard</h3>
+    <h3>Feature Transcript</h3>
     <img width="300" src="https://github.com/user-attachments/assets/63948a2c-d306-43d0-a297-b6e7845fa766" alt="Feature Dashboard Screenshot">
   </div>
   
   <div>
-    <h3>Settings Panel</h3>
+    <h3>Settings</h3>
     <img width="300" src="https://github.com/user-attachments/assets/d3123ebb-9092-4a27-98bc-21845a3ab921" alt="Settings Panel Screenshot">
   </div>
 </div>
