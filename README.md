@@ -14,20 +14,18 @@ Advanced URL monitoring extension with Netflix transcript viewer and 140+ custom
   
   <div>
     <h3>Main Interface</h3>
-    <img width="600" src="https://github.com/user-attachments/assets/35db5eee-907e-4a19-b662-e1c654fd51d8" alt="Main Interface Screenshot">
+    <img width="300" src="https://github.com/user-attachments/assets/35db5eee-907e-4a19-b662-e1c654fd51d8" alt="Main Interface Screenshot">
   </div>
   
   <div>
     <h3>Feature Dashboard</h3>
-    <img width="600" src="https://github.com/user-attachments/assets/63948a2c-d306-43d0-a297-b6e7845fa766" alt="Feature Dashboard Screenshot">
+    <img width="300" src="https://github.com/user-attachments/assets/63948a2c-d306-43d0-a297-b6e7845fa766" alt="Feature Dashboard Screenshot">
   </div>
   
   <div>
     <h3>Settings Panel</h3>
-    <img width="600" src="https://github.com/user-attachments/assets/d3123ebb-9092-4a27-98bc-21845a3ab921" alt="Settings Panel Screenshot">
+    <img width="300" src="https://github.com/user-attachments/assets/d3123ebb-9092-4a27-98bc-21845a3ab921" alt="Settings Panel Screenshot">
   </div>
-</div>
-
 </div>
 
 ## Features
