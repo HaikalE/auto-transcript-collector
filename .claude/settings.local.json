@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:ipv4-c004-cgk001-moratel-isp.1.oca.nflxvideo.net)"
-    ],
-    "deny": []
-  }
-}
