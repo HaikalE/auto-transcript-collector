@@ -26,7 +26,8 @@
   
   <div>
     <h4>🎨 Theme Selector</h4>
-    <img width="300" src="https://github.com/user-attachments/assets/d3123ebb-9092-4a27-98bc-21845a3ab921" alt="Theme Selector - 140+ customizable color themes with search">
+    <img width="300" src="https://github.com/user-attachments/assets/de91f275-8698-4fea-8934-5b54c4224a90" alt="Theme Selector - 140+ customizable color themes with search"/>
+
   </div>
   
   <div>
