@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Smart URL Monitor (?o= detector)",
-  "version": "3.3",
-  "description": "Intelligent URL collector with smart filtering, 140+ beautiful themes, and Netflix transcript viewer. Avoids unwanted downloads, shows only quality URLs!",
+  "name": "Netflix Transcript Collector",
+  "version": "3.5",
+  "description": "Professional Netflix transcript collector with clickable timestamps, YouTube-style navigation, and 140+ beautiful themes. Transform Netflix into a learning platform!",
   "permissions": [
     "webRequest",
     "downloads",
@@ -19,6 +19,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Smart URL Monitor - Intelligent filtering with themes & transcripts"
+    "default_title": "Netflix Transcript Collector - Clickable transcripts & themes"
   }
 }
