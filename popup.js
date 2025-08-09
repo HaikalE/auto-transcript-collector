@@ -233,6 +233,14 @@ let isProcessing = false;
 let currentTheme = DEFAULT_THEME;
 let favoriteThemes = new Set();
 
+// Transcript state persistence
+let transcriptState = {
+  isOpen: false,
+  videoUrl: null,
+  subtitles: [],
+  lastHighlightedIndex: -1
+};
+
 // Utility function untuk waiting/delay
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -687,7 +695,7 @@ function handleThemeSearch() {
   });
 }
 
-// Load state from background
+// Load state from background and transcript state
 function loadState() {
   try {
     chrome.runtime.sendMessage({ action: 'getState' }, function(response) {
@@ -704,6 +712,10 @@ function loadState() {
       
       updateUI();
       renderUrlList();
+      
+      // Load transcript state dari storage
+      loadTranscriptState();
+      
       console.log('State loaded:', { isActive, urlCount: urls.length, stats });
     });
   } catch (error) {
@@ -713,6 +725,40 @@ function loadState() {
     stats = { detected: 0, filtered: 0, total: 0 };
     updateUI();
     renderUrlList();
+    loadTranscriptState();
+  }
+}
+
+// Load transcript state from storage
+function loadTranscriptState() {
+  try {
+    chrome.storage.local.get(['transcriptState'], (result) => {
+      if (!chrome.runtime.lastError && result.transcriptState) {
+        transcriptState = result.transcriptState;
+        console.log('📚 Transcript state loaded:', transcriptState);
+        
+        // Jika transcript sedang terbuka, restore transcript modal
+        if (transcriptState.isOpen && transcriptState.videoUrl && transcriptState.subtitles.length > 0) {
+          console.log('🔄 Restoring transcript modal for:', transcriptState.videoUrl);
+          restoreTranscriptModal();
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error loading transcript state:', error);
+  }
+}
+
+// Save transcript state to storage
+function saveTranscriptState() {
+  try {
+    chrome.storage.local.set({ transcriptState: transcriptState }, () => {
+      if (!chrome.runtime.lastError) {
+        console.log('💾 Transcript state saved');
+      }
+    });
+  } catch (error) {
+    console.error('Error saving transcript state:', error);
   }
 }
 
@@ -1120,19 +1166,61 @@ async function showTranscriptModalEnhanced(videoUrl) {
         transform: translateY(0) scale(1); 
       }
     }
+    
+    /* 🎯 LIVE HIGHLIGHTING STYLES - Clean & HCI Compliant */
+    .transcript-item.current-highlight {
+      background: linear-gradient(90deg, var(--accent-color), var(--secondary-color)) !important;
+      border-left: 3px solid var(--accent-color) !important;
+      box-shadow: 0 1px 8px rgba(109, 92, 111, 0.2) !important;
+      transition: all 0.3s ease !important;
+      position: relative !important;
+    }
+    
+    .transcript-item.current-highlight .transcript-time {
+      font-weight: 600 !important;
+      /* Keep original timestamp color for better visibility */
+    }
+    
+    .transcript-item.current-highlight .transcript-text {
+      font-weight: 500 !important;
+      color: var(--primary-color) !important;
+    }
+    
+    /* Smooth transitions untuk semua transcript items */
+    .transcript-item {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    @keyframes highlightFadeIn {
+      from { 
+        background: transparent;
+        transform: scale(1);
+      }
+      to { 
+        background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+        transform: scale(1.02);
+      }
+    }
   `;
   
   document.head.appendChild(style);
   document.body.appendChild(modal);
   
-  // Close handlers
+  // Close handlers dengan state persistence
   modal.querySelector('.transcript-close').addEventListener('click', () => {
+    // Clear transcript state ketika user explicit tutup
+    transcriptState.isOpen = false;
+    saveTranscriptState();
     document.body.removeChild(modal);
     document.head.removeChild(style);
   });
   
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
+      // Clear transcript state ketika user explicit tutup
+      transcriptState.isOpen = false;
+      saveTranscriptState();
       document.body.removeChild(modal);
       document.head.removeChild(style);
     }
@@ -1184,10 +1272,10 @@ async function startEnhancedLoading(modal, videoUrl, attemptNumber = 1) {
     
     // Fetch the TTML file dengan extended timeout
     loadingMessage.textContent = "Downloading transcript file...";
-    loadingDetails.textContent = "Fetching TTML data from remote repository (extended timeout)...";
+    loadingDetails.textContent = "Fetching TTML data from Netflix servers (extended timeout)...";
     
-    console.log('🔍 Fetching TTML file from GitHub...');
-    const response = await fetch('https://raw.githubusercontent.com/HaikalE/auto-transcript-collector/main/example_transcript.txt');
+    console.log('🔍 Fetching TTML file from Netflix URL:', videoUrl);
+    const response = await fetch(videoUrl);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1219,6 +1307,15 @@ async function startEnhancedLoading(modal, videoUrl, attemptNumber = 1) {
     
     // Wait a bit to show completion
     await wait(800); // Extended dari 500ms
+    
+    // Save transcript state setelah berhasil load
+    transcriptState = {
+      isOpen: true,
+      videoUrl: videoUrl,
+      subtitles: subtitles,
+      lastHighlightedIndex: -1
+    };
+    saveTranscriptState();
     
     // Render transcript
     await renderTranscriptEnhanced(modal, subtitles);
@@ -1394,6 +1491,9 @@ async function renderTranscriptEnhanced(modal, subtitles) {
     
     console.log(`✅ Enhanced rendering v3.5 completed for ${subtitles.length} entries with smooth animations`);
     
+    // Start live highlighting system
+    startLiveHighlighting(body, subtitles);
+    
     // Add click handlers for seeking
     body.querySelectorAll('.transcript-item').forEach((item) => {
       item.addEventListener('click', () => {
@@ -1408,34 +1508,103 @@ async function renderTranscriptEnhanced(modal, subtitles) {
         // Execute Netflix seek
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
           if (tabs[0]) {
+            // Check if it's Netflix tab
+            if (!tabs[0].url || !tabs[0].url.includes('netflix.com')) {
+              showNotification('⚠️ Please open Netflix tab first!', 'warning');
+              return;
+            }
+            
             chrome.scripting.executeScript({
               target: { tabId: tabs[0].id },
+              world: 'MAIN', // <-- KUNCI UTAMA: Execute di main world untuk akses window.netflix
               func: function(time) {
-                try {
-                  const waktuTujuanDetik = time;
-                  const api = window.netflix.appContext.state.playerApp.getAPI();
-                  const videoPlayer = api.videoPlayer;
-                  const sessionId = videoPlayer.getAllPlayerSessionIds()[0];
-                  const player = videoPlayer.getVideoPlayerBySessionId(sessionId);
-                  
-                  const waktuTujuanMilidetik = waktuTujuanDetik * 1000;
-                  player.seek(waktuTujuanMilidetik);
-                  
-                  console.log('✅ Berhasil melompat ke detik ' + waktuTujuanDetik);
-                  return true;
-                } catch (e) {
-                  console.error("Gagal melakukan seek. Pastikan video sedang diputar.", e);
-                  return false;
+                // Function untuk wait/delay
+                function wait(ms) {
+                  return new Promise(resolve => setTimeout(resolve, ms));
                 }
+                
+                // Function untuk retry dengan timeout
+                async function attemptSeek(targetTime, maxAttempts = 3) {
+                  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    try {
+                      console.log(`🎯 Attempt ${attempt}/${maxAttempts}: Seeking to ${targetTime} seconds`);
+                      
+                      // Wait a bit for page to be ready
+                      await wait(200);
+                      
+                      // Check if Netflix API is available
+                      if (!window.netflix || !window.netflix.appContext) {
+                        console.warn(`⚠️ Attempt ${attempt}: Netflix API not ready yet, waiting...`);
+                        await wait(800);
+                        continue;
+                      }
+                      
+                      const api = window.netflix.appContext.state.playerApp.getAPI();
+                      const videoPlayer = api.videoPlayer;
+                      const sessionIds = videoPlayer.getAllPlayerSessionIds();
+                      
+                      if (!sessionIds || sessionIds.length === 0) {
+                        console.warn(`⚠️ Attempt ${attempt}: No active video sessions, waiting...`);
+                        await wait(800);
+                        continue;
+                      }
+                      
+                      const sessionId = sessionIds[0];
+                      const player = videoPlayer.getVideoPlayerBySessionId(sessionId);
+                      
+                      if (!player) {
+                        console.warn(`⚠️ Attempt ${attempt}: Player instance not ready, waiting...`);
+                        await wait(800);
+                        continue;
+                      }
+                      
+                      // Convert to milliseconds (seperti script manual yang berhasil)
+                      const waktuTujuanMilidetik = targetTime * 1000;
+                      
+                      console.log(`🎬 Attempt ${attempt}: Executing seek to ${waktuTujuanMilidetik} milliseconds`);
+                      player.seek(waktuTujuanMilidetik);
+                      
+                      console.log(`✅ Berhasil melompat ke detik ${targetTime}`);
+                      return { success: true, time: targetTime, attempts: attempt };
+                      
+                    } catch (e) {
+                      console.error(`❌ Attempt ${attempt} failed:`, e);
+                      if (attempt === maxAttempts) {
+                        return { success: false, error: e.message, attempts: attempt };
+                      }
+                      await wait(1000);
+                    }
+                  }
+                  
+                  return { success: false, error: 'Max attempts reached', attempts: maxAttempts };
+                }
+                
+                // Execute the seek with retry
+                return attemptSeek(time);
               },
               args: [timeInSeconds]
             }, (result) => {
+              console.log('Script execution result:', result);
+              
+              if (chrome.runtime.lastError) {
+                console.error('Chrome runtime error:', chrome.runtime.lastError);
+                showNotification('Script execution failed: ' + chrome.runtime.lastError.message, 'error');
+                return;
+              }
+              
               if (result && result[0] && result[0].result) {
-                showNotification(`⏰ Jumped to ${formatTime(timeInSeconds)}`, 'success');
+                const res = result[0].result;
+                if (res.success) {
+                  showNotification(`⏰ Jumped to ${formatTime(timeInSeconds)}`, 'success');
+                } else {
+                  showNotification(`Failed: ${res.error}`, 'error');
+                }
               } else {
-                showNotification('Failed to seek. Make sure Netflix video is playing.', 'error');
+                showNotification('Unexpected script result', 'error');
               }
             });
+          } else {
+            showNotification('No active tab found', 'error');
           }
         });
       });
@@ -1448,6 +1617,252 @@ async function renderTranscriptEnhanced(modal, subtitles) {
 function showTranscriptModal(videoUrl) {
   // Redirect to enhanced version
   showTranscriptModalEnhanced(videoUrl);
+}
+
+// Restore transcript modal from saved state
+async function restoreTranscriptModal() {
+  if (!transcriptState.isOpen || !transcriptState.subtitles.length) {
+    return;
+  }
+  
+  console.log('🔄 Restoring transcript modal with', transcriptState.subtitles.length, 'entries');
+  
+  // Create modal structure (sama seperti showTranscriptModalEnhanced tapi tanpa loading)
+  const modal = document.createElement('div');
+  modal.className = 'transcript-modal';
+  modal.innerHTML = `
+    <div class="transcript-content">
+      <div class="transcript-header">
+        <h3>🎬 Video Transcript v3.5</h3>
+        <button class="transcript-close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="transcript-body">
+        <!-- Content akan di-render langsung -->
+      </div>
+    </div>
+  `;
+  
+  // Add enhanced loading styles (reuse dari showTranscriptModalEnhanced)
+  const style = document.createElement('style');
+  style.textContent = `
+    .enhanced-loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--accent-color);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .loading-animation {
+      margin-bottom: 30px;
+      position: relative;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .spinner-container {
+      position: relative;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(109, 92, 111, 0.2);
+      border-top: 3px solid var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .loading-pulse {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 70px;
+      height: 70px;
+      border: 2px solid var(--accent-color);
+      border-radius: 50%;
+      opacity: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.3; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    
+    .loading-progress {
+      margin-bottom: 25px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--secondary-color);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border: 1px solid var(--accent-color);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+    
+    .progress-percentage {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+    
+    .loading-message {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--accent-color);
+      min-height: 24px;
+    }
+    
+    .loading-details {
+      font-size: 12px;
+      color: var(--accent-color);
+      opacity: 0.7;
+      margin-bottom: 20px;
+      min-height: 18px;
+    }
+    
+    .loading-tips {
+      font-size: 11px;
+      color: var(--accent-color);
+      opacity: 0.6;
+      font-style: italic;
+      background: var(--secondary-color);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-color);
+    }
+    
+    .error-display {
+      text-align: center;
+      padding: 30px 20px;
+      color: #8B5A3C;
+    }
+    
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #8B5A3C;
+    }
+    
+    .retry-button {
+      background: var(--accent-color);
+      color: var(--primary-color);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 15px;
+      transition: opacity 0.2s ease;
+    }
+    
+    .retry-button:hover {
+      opacity: 0.8;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(15px) scale(0.95); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+      }
+    }
+    
+    /* 🎯 LIVE HIGHLIGHTING STYLES - Clean & HCI Compliant */
+    .transcript-item.current-highlight {
+      background: linear-gradient(90deg, var(--accent-color), var(--secondary-color)) !important;
+      border-left: 3px solid var(--accent-color) !important;
+      box-shadow: 0 1px 8px rgba(109, 92, 111, 0.2) !important;
+      transition: all 0.3s ease !important;
+      position: relative !important;
+    }
+    
+    .transcript-item.current-highlight .transcript-time {
+      font-weight: 600 !important;
+      /* Keep original timestamp color for better visibility */
+    }
+    
+    .transcript-item.current-highlight .transcript-text {
+      font-weight: 500 !important;
+      color: var(--primary-color) !important;
+    }
+    
+    /* Smooth transitions untuk semua transcript items */
+    .transcript-item {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    @keyframes highlightFadeIn {
+      from { 
+        background: transparent;
+        transform: scale(1);
+      }
+      to { 
+        background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+        transform: scale(1.02);
+      }
+    }
+  `;
+  
+  document.head.appendChild(style);
+  document.body.appendChild(modal);
+  
+  // Close handlers dengan state persistence
+  modal.querySelector('.transcript-close').addEventListener('click', () => {
+    transcriptState.isOpen = false;
+    saveTranscriptState();
+    document.body.removeChild(modal);
+    document.head.removeChild(style);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      transcriptState.isOpen = false;
+      saveTranscriptState();
+      document.body.removeChild(modal);
+      document.head.removeChild(style);
+    }
+  });
+  
+  // Render transcript langsung tanpa loading animation
+  await renderTranscriptEnhanced(modal, transcriptState.subtitles);
+  
+  console.log('✅ Transcript modal restored successfully');
 }
 
 // Show notification
@@ -1515,6 +1930,144 @@ function showNotification(message, type) {
     
   } catch (error) {
     console.error('Error showing notification:', error);
+  }
+}
+
+// 🎯 LIVE HIGHLIGHTING SYSTEM - Sync transcript dengan current video time
+function startLiveHighlighting(modalBody, subtitles) {
+  console.log('🔥 Starting live highlighting system for', subtitles.length, 'entries');
+  
+  let highlightInterval = null;
+  let lastHighlightedIndex = -1;
+  
+  // Function untuk mendapatkan current video time dari Netflix
+  async function getCurrentVideoTime() {
+    return new Promise((resolve) => {
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        if (!tabs[0] || !tabs[0].url || !tabs[0].url.includes('netflix.com')) {
+          resolve(null);
+          return;
+        }
+        
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          world: 'MAIN',
+          func: function() {
+            try {
+              const api = window.netflix.appContext.state.playerApp.getAPI();
+              const videoPlayer = api.videoPlayer;
+              const sessionId = videoPlayer.getAllPlayerSessionIds()[0];
+              const player = videoPlayer.getVideoPlayerBySessionId(sessionId);
+              
+              // Mengambil waktu dalam milidetik
+              const timeInMilliseconds = player.getCurrentTime();
+              
+              if (isNaN(timeInMilliseconds)) {
+                return { success: false, error: 'Invalid time' };
+              }
+              
+              // Konversi ke detik
+              const totalSeconds = Math.floor(timeInMilliseconds / 1000);
+              return { success: true, currentTime: totalSeconds };
+              
+            } catch (e) {
+              return { success: false, error: e.message };
+            }
+          }
+        }, (result) => {
+          if (result && result[0] && result[0].result && result[0].result.success) {
+            resolve(result[0].result.currentTime);
+          } else {
+            resolve(null);
+          }
+        });
+      });
+    });
+  }
+  
+  // Function untuk highlight current subtitle
+  function highlightCurrentSubtitle(currentTime) {
+    if (currentTime === null) return;
+    
+    // Find subtitle yang sedang active berdasarkan time
+    let activeIndex = -1;
+    for (let i = 0; i < subtitles.length; i++) {
+      const subtitle = subtitles[i];
+      if (currentTime >= subtitle.start && currentTime <= subtitle.end) {
+        activeIndex = i;
+        break;
+      }
+      // Jika current time sebelum subtitle ini, gunakan subtitle sebelumnya
+      if (currentTime < subtitle.start && i > 0) {
+        activeIndex = i - 1;
+        break;
+      }
+    }
+    
+    // Jika tidak ada yang cocok dan time setelah semua subtitle
+    if (activeIndex === -1 && currentTime > subtitles[subtitles.length - 1]?.end) {
+      activeIndex = subtitles.length - 1;
+    }
+    
+    // Update highlighting jika ada perubahan
+    if (activeIndex !== lastHighlightedIndex && activeIndex >= 0) {
+      // Remove previous highlight
+      const prevHighlighted = modalBody.querySelector('.transcript-item.current-highlight');
+      if (prevHighlighted) {
+        prevHighlighted.classList.remove('current-highlight');
+      }
+      
+      // Add new highlight
+      const transcriptItems = modalBody.querySelectorAll('.transcript-item');
+      if (transcriptItems[activeIndex]) {
+        transcriptItems[activeIndex].classList.add('current-highlight');
+        
+        // Smooth scroll ke item yang sedang active
+        transcriptItems[activeIndex].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        
+        console.log(`🎯 Highlighted subtitle ${activeIndex + 1}: ${formatTime(currentTime)} - "${subtitles[activeIndex].text.substring(0, 50)}..."`);
+      }
+      
+      lastHighlightedIndex = activeIndex;
+    }
+  }
+  
+  // Start polling video time setiap 1 detik
+  highlightInterval = setInterval(async () => {
+    const currentTime = await getCurrentVideoTime();
+    if (currentTime !== null) {
+      highlightCurrentSubtitle(currentTime);
+    }
+  }, 1000); // Update setiap detik
+  
+  console.log('✅ Live highlighting started with 1-second interval');
+  
+  // Cleanup ketika modal ditutup
+  const modal = modalBody.closest('.transcript-modal');
+  if (modal) {
+    const originalCloseFunction = modal.querySelector('.transcript-close').onclick;
+    modal.querySelector('.transcript-close').onclick = function() {
+      if (highlightInterval) {
+        clearInterval(highlightInterval);
+        console.log('🛑 Live highlighting stopped');
+      }
+      if (originalCloseFunction) originalCloseFunction();
+    };
+    
+    // Cleanup on modal click outside
+    const originalModalClick = modal.onclick;
+    modal.onclick = function(e) {
+      if (e.target === modal) {
+        if (highlightInterval) {
+          clearInterval(highlightInterval);
+          console.log('🛑 Live highlighting stopped');
+        }
+      }
+      if (originalModalClick) originalModalClick(e);
+    };
   }
 }
 
