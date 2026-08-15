@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Netflix Transcript Collector",
   "version": "3.5",
-  "description": "Professional Netflix transcript collector with clickable timestamps, YouTube-style navigation, and 140+ beautiful themes. Transform Netflix into a learning platform!",
+  "description": "Captures Netflix subtitle responses and converts TTML captions into an interactive timestamped transcript.",
   "permissions": [
     "webRequest",
     "downloads",
@@ -19,6 +19,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Netflix Transcript Collector - Clickable transcripts & themes"
+    "default_title": "Netflix Transcript Collector"
   }
 }
